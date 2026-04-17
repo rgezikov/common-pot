@@ -23,8 +23,8 @@
             class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
     <div>
-        <label class="block text-sm font-medium mb-1">Amount</label>
-        <input type="number" name="amount" step="0.01" min="0.01" required
+        <label class="block text-sm font-medium mb-1">Amount <span class="text-gray-400 font-normal">(or formula, e.g. =120-15)</span></label>
+        <input type="text" inputmode="decimal" name="amount" required
             value="{{ request.POST.amount }}"
             class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
