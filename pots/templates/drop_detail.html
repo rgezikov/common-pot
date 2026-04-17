@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ drop.description }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">{{ drop.description }}</h2>
+    <a href="{% url 'pot_detail' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">← {{ pot.name }}</a>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-lg px-4 py-4 shadow mb-6 space-y-2 text-sm">
+    <div class="flex justify-between">
+        <span class="text-gray-400">Amount</span>
+        <span class="font-semibold">{{ drop.amount }}</span>
+    </div>
+    <div class="flex justify-between">
+        <span class="text-gray-400">Paid by</span>
+        <span>{{ drop.paid_by.name }}</span>
+    </div>
+    <div class="flex justify-between">
+        <span class="text-gray-400">Date</span>
+        <span>{{ drop.date }}</span>
+    </div>
+</div>
+
+<h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Split</h3>
+<ul class="space-y-2">
+{% for split in splits %}
+    <li class="flex justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+        <span>{{ split.member.name }}</span>
+        <span class="font-medium">{{ split.amount }}</span>
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}

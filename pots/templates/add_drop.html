@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Add Drop — {{ pot.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Add Drop</h2>
+    <a href="{% url 'pot_detail' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">← {{ pot.name }}</a>
+</div>
+
+{% if errors %}
+    <ul class="mb-4 space-y-1">
+    {% for error in errors %}
+        <li class="text-red-400 text-sm">{{ error }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post" class="space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block text-sm font-medium mb-1">Description</label>
+        <input type="text" name="description" required autofocus
+            value="{{ request.POST.description }}"
+            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Amount</label>
+        <input type="number" name="amount" step="0.01" min="0.01" required
+            value="{{ request.POST.amount }}"
+            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Date</label>
+        <input type="date" name="date" required
+            value="{{ request.POST.date|default:today }}"
+            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Paid by</label>
+        <select name="paid_by"
+            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {% for member in members %}
+                <option value="{{ member.id }}" {% if request.POST.paid_by == member.id|stringformat:"s" %}selected{% endif %}>{{ member.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-2">Split (enter share weight per member; leave 0 to exclude)</label>
+        <ul class="space-y-2">
+        {% for member in members %}
+            <li class="flex items-center gap-3">
+                <span class="flex-1 text-sm">{{ member.name }}</span>
+                <input type="number" name="weight_{{ member.id }}" min="0" step="any"
+                    value="{{ request.POST|default_if_none:'' }}"
+                    placeholder="1"
+                    class="w-24 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2 text-base text-right focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </li>
+        {% endfor %}
+        </ul>
+        <p class="text-xs text-gray-400 mt-2">Leave all blank to split equally among everyone.</p>
+    </div>
+    <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+        Save Drop
+    </button>
+</form>
+{% endblock %}
