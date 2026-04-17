@@ -68,6 +68,12 @@ Verify login as new user:
 ssh potdev@pot.respobit.eu
 ```
 
+Make the home directory accessible to nginx for static file serving:
+
+```bash
+chmod 755 /home/potdev
+```
+
 ---
 
 ## Step 4 — Configure Firewall

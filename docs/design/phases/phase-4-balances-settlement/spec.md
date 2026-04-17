@@ -8,3 +8,9 @@
 - Display balance summary for the pot
 - Generate settlement suggestions — minimal set of transfers to bring all balances to zero
 - Display settlement as a clear list: "Alice pays Bob €12"
+
+## Testing
+
+- Unit tests for balance calculation
+- Unit tests for settlement algorithm
+- All business logic must have passing tests before this phase is done

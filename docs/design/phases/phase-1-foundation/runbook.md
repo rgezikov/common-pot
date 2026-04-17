@@ -1,19 +1,23 @@
 # Phase 1 — Runbook: Project Foundation
 
+> **Conventions used in this runbook:**
+> - `[local]` — run on your developer machine
+> - `[server]` — run on the server as `potdev` unless noted as `[server/root]`
+
 ## Prerequisites
 
 - Phase 0 complete (server running, gunicorn + nginx working)
 - uv installed locally
-- Git repo at `/home/roman/work/courses/sdd/exp1/`
+- Git repo cloned locally (referred to as `<project-root>` below)
 
 ---
 
 ## Step 1 — Local Development Setup
 
-In the project root, create a virtual environment and install Django:
+**[local]** In the project root, create a virtual environment and install Django:
 
 ```bash
-cd /home/roman/work/courses/sdd/exp1
+cd <project-root>
 uv venv --python 3.12
 source .venv/bin/activate
 uv pip install django
@@ -24,7 +28,7 @@ uv pip freeze > requirements.txt
 
 ## Step 2 — Create Django Project and App
 
-Create the Django project in the repo root:
+**[local]** Create the Django project in the repo root:
 
 ```bash
 django-admin startproject commonpot .
@@ -34,7 +38,7 @@ python manage.py startapp pots
 This produces:
 
 ```
-exp1/
+<project-root>/
   commonpot/
     settings.py
     urls.py
@@ -46,7 +50,7 @@ exp1/
   manage.py
 ```
 
-Register the app in `commonpot/settings.py`:
+**[local]** Register the app in `commonpot/settings.py`:
 
 ```python
 INSTALLED_APPS = [
@@ -59,7 +63,7 @@ INSTALLED_APPS = [
 
 ## Step 3 — Configure Database and Settings
 
-In `commonpot/settings.py`, set the allowed hosts:
+**[local]** In `commonpot/settings.py`, set the allowed hosts:
 
 ```python
 ALLOWED_HOSTS = ['pot.respobit.eu', 'localhost', '127.0.0.1']
@@ -67,13 +71,13 @@ ALLOWED_HOSTS = ['pot.respobit.eu', 'localhost', '127.0.0.1']
 
 SQLite is configured by default — no changes needed.
 
-Run initial migrations:
+**[local]** Run initial migrations:
 
 ```bash
 python manage.py migrate
 ```
 
-Verify the dev server runs:
+**[local]** Verify the dev server runs:
 
 ```bash
 python manage.py runserver
@@ -85,7 +89,7 @@ Open `http://localhost:8000` — should show the Django welcome page.
 
 ## Step 4 — Define Data Models
 
-Edit `pots/models.py`:
+**[local]** Edit `pots/models.py`:
 
 ```python
 import uuid
@@ -95,7 +99,7 @@ from django.db import models
 class Pot(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    invite_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -104,19 +108,28 @@ class Pot(models.Model):
 
 class Member(models.Model):
     pot = models.ForeignKey(Pot, on_delete=models.CASCADE, related_name='members')
+    telegram_user_id = models.BigIntegerField()
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('pot', 'telegram_user_id')
 
     def __str__(self):
         return f"{self.name} ({self.pot.name})"
 
 
 class Drop(models.Model):
+    SOURCE_WEB = 'web'
+    SOURCE_TELEGRAM = 'telegram'
+    SOURCE_CHOICES = [(SOURCE_WEB, 'Web'), (SOURCE_TELEGRAM, 'Telegram')]
+
     pot = models.ForeignKey(Pot, on_delete=models.CASCADE, related_name='drops')
     description = models.CharField(max_length=200)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid_by = models.ForeignKey(Member, on_delete=models.PROTECT, related_name='drops_paid')
     date = models.DateField()
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default=SOURCE_WEB)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -132,7 +145,7 @@ class Split(models.Model):
         return f"{self.member.name}: {self.amount}"
 ```
 
-Create and run migrations:
+**[local]** Create and run migrations:
 
 ```bash
 python manage.py makemigrations
@@ -143,7 +156,7 @@ python manage.py migrate
 
 ## Step 5 — Register Models in Admin
 
-Edit `pots/admin.py`:
+**[local]** Edit `pots/admin.py`:
 
 ```python
 from django.contrib import admin
@@ -155,7 +168,7 @@ admin.site.register(Drop)
 admin.site.register(Split)
 ```
 
-Create a superuser:
+**[local]** Create a superuser:
 
 ```bash
 python manage.py createsuperuser
@@ -167,13 +180,13 @@ Verify: open `http://localhost:8000/admin` — all four models should be visible
 
 ## Step 6 — Base Template with HTMX and TailwindCSS
 
-Create the templates directory:
+**[local]** Create the templates directory:
 
 ```bash
-mkdir -p pots/templates/pots
+mkdir -p pots/templates
 ```
 
-Configure template directory in `commonpot/settings.py`:
+**[local]** Configure template directory in `commonpot/settings.py`:
 
 ```python
 TEMPLATES = [
@@ -185,7 +198,7 @@ TEMPLATES = [
 ]
 ```
 
-Create `pots/templates/base.html`:
+**[local]** Create `pots/templates/base.html`:
 
 ```html
 <!DOCTYPE html>
@@ -209,7 +222,7 @@ Create `pots/templates/base.html`:
 </html>
 ```
 
-Create a placeholder home view in `pots/views.py`:
+**[local]** Create a placeholder home view in `pots/views.py`:
 
 ```python
 from django.shortcuts import render
@@ -218,7 +231,7 @@ def home(request):
     return render(request, 'home.html')
 ```
 
-Create `pots/templates/home.html`:
+**[local]** Create `pots/templates/home.html`:
 
 ```html
 {% extends "base.html" %}
@@ -231,7 +244,7 @@ Create `pots/templates/home.html`:
 
 ## Step 7 — URL Routing Skeleton
 
-Edit `commonpot/urls.py`:
+**[local]** Edit `commonpot/urls.py`:
 
 ```python
 from django.contrib import admin
@@ -252,36 +265,31 @@ Verify: open `http://localhost:8000` — should show the Welcome page with Tailw
 
 ### 8.1 — Push code to server
 
-On your local machine, copy the project to the server (for now, until we set up git-based deployment):
+**[local]** Copy the project to the server:
 
 ```bash
 rsync -av --exclude='.venv' --exclude='__pycache__' --exclude='*.sqlite3' \
-  /home/roman/work/courses/sdd/exp1/ potdev@pot.respobit.eu:~/app/
+  <project-root>/ potdev@pot.respobit.eu:~/app/
 ```
 
-### 8.2 — Install dependencies on server
+### 8.2 — Configure production settings
 
-SSH into the server as `potdev` and set up the environment:
-
-```bash
-cd ~/app
-uv venv --python 3.12
-source .venv/bin/activate
-uv pip install -r requirements.txt
-```
-
-### 8.3 — Configure production settings
-
-On the server, set the secret key and debug mode via environment variables. Edit `commonpot/settings.py` locally:
+**[local]** Edit `commonpot/settings.py` to read secrets from environment variables:
 
 ```python
 import os
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-production')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+SECRET_KEY = os.environ.get('COMPOT_SECRET_KEY', 'dev-secret-key-change-in-production')
+DEBUG = os.environ.get('COMPOT_DEBUG', 'False') == 'True'
 ```
 
-Create an environment file on the server:
+**[local]** Generate a secret key:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+**[server]** Create an environment file:
 
 ```bash
 vi ~/app/.env
@@ -290,17 +298,24 @@ vi ~/app/.env
 Content:
 
 ```
-DJANGO_SECRET_KEY=<generate a random secret key>
-DJANGO_DEBUG=False
+COMPOT_SECRET_KEY=<paste generated secret key>
+COMPOT_DEBUG=False
 ```
 
-Generate a secret key locally:
+### 8.3 — Install dependencies on server
+
+**[server]** Set up the virtual environment:
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(50))"
+cd ~/app
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install -r requirements.txt
 ```
 
 ### 8.4 — Run migrations on server
+
+**[server]**
 
 ```bash
 cd ~/app
@@ -311,7 +326,7 @@ python manage.py collectstatic --noinput
 
 ### 8.5 — Set up gunicorn as a systemd service
 
-As root on the server, create a systemd service file:
+**[server/root]** Create a systemd service file:
 
 ```bash
 vi /etc/systemd/system/commonpot.service
@@ -338,7 +353,7 @@ ExecStart=/home/potdev/app/.venv/bin/gunicorn \
 WantedBy=multi-user.target
 ```
 
-Enable and start the service:
+**[server/root]** Enable and start the service:
 
 ```bash
 systemctl daemon-reload
@@ -347,11 +362,9 @@ systemctl start commonpot
 systemctl status commonpot
 ```
 
-### 8.6 — Update nginx config
+### 8.6 — Reload nginx
 
-As root, update the nginx location block in `/etc/nginx/sites-available/default` (in the HTTPS server block) — it should already be proxying to port 8000 from Phase 0, so no changes needed.
-
-Reload nginx:
+**[server/root]** The nginx config already proxies to port 8000 from Phase 0 — no changes needed. Just reload:
 
 ```bash
 systemctl reload nginx

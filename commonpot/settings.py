@@ -27,6 +27,7 @@ SECRET_KEY = os.environ.get('COMPOT_SECRET_KEY', 'django-insecure-b7_$z3*qev1&ay
 DEBUG = os.environ.get('COMPOT_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['pot.respobit.eu', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://pot.respobit.eu']
 
 
 # Application definition
