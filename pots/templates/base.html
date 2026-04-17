@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Common Pot{% endblock %}</title>
+    <script>
+    // Apply theme before page renders to avoid flash
+    (function() {
+        var stored = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+        }
+    })();
+    </script>
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
@@ -11,12 +21,30 @@
 <body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
     <header class="bg-white dark:bg-gray-800 shadow px-4 py-3 flex items-center justify-between">
         <a href="/" class="text-xl font-bold">Common Pot</a>
-        {% if request.session.telegram_user %}
-        <a href="/logout/" class="text-sm text-gray-300 hover:text-white">Logout</a>
-        {% endif %}
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="text-gray-400 hover:text-gray-200" title="Toggle light/dark mode">
+                <span class="dark:hidden">🌙</span>
+                <span class="hidden dark:inline">☀️</span>
+            </button>
+            {% if request.session.telegram_user %}
+            <a href="/logout/" class="text-sm text-gray-400 hover:text-gray-200">Logout</a>
+            {% endif %}
+        </div>
     </header>
     <main class="px-4 py-6 max-w-lg mx-auto">
         {% block content %}{% endblock %}
     </main>
+    <script>
+    function toggleTheme() {
+        var html = document.documentElement;
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    </script>
 </body>
 </html>
