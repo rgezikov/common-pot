@@ -11,5 +11,9 @@ urlpatterns = [
     path('pot/<uuid:token>/', views.pot_detail, name='pot_detail'),
     path('pot/<uuid:token>/drop/new/', views.add_drop, name='add_drop'),
     path('pot/<uuid:token>/drop/<int:drop_id>/', views.drop_detail, name='drop_detail'),
+    path('pot/<uuid:token>/drop/<int:drop_id>/edit/', views.edit_drop, name='edit_drop'),
+    path('pot/<uuid:token>/drop/<int:drop_id>/delete/', views.delete_drop, name='delete_drop'),
+    path('pot/<uuid:token>/member/<int:member_id>/remove/', views.remove_member, name='remove_member'),
+    path('pot/<uuid:token>/rename/', views.rename_pot, name='rename_pot'),
     path('join/<uuid:token>/', views.join_pot, name='join_pot'),
 ]

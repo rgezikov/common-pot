@@ -22,7 +22,7 @@
 </div>
 
 <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Split</h3>
-<ul class="space-y-2">
+<ul class="space-y-2 mb-6">
 {% for split in splits %}
     <li class="flex justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
         <span>{{ split.member.name }}</span>
@@ -30,4 +30,19 @@
     </li>
 {% endfor %}
 </ul>
+
+<div class="flex gap-3">
+    <a href="{% url 'edit_drop' pot.invite_token drop.id %}"
+        class="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 rounded-lg text-sm">
+        Edit
+    </a>
+    <form method="post" action="{% url 'delete_drop' pot.invite_token drop.id %}" class="flex-1"
+        onsubmit="return confirm('Delete this drop?')">
+        {% csrf_token %}
+        <button type="submit"
+            class="w-full bg-red-700 hover:bg-red-600 text-white font-medium py-3 rounded-lg text-sm">
+            Delete
+        </button>
+    </form>
+</div>
 {% endblock %}
