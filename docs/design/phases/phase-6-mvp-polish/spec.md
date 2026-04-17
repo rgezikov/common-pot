@@ -4,6 +4,7 @@
 
 ## Tasks
 
+- Light/dark mode: follow device system preference, with manual toggle override
 - Mobile-first UI pass: touch targets, spacing, typography
 - Confirmation dialogs for destructive actions (delete Drop, remove member)
 - Empty states and helpful messages (e.g. "No Drops yet — add the first one")
