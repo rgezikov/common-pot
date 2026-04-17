@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Pot, Member, Drop, Split
 from .telegram_auth import verify_telegram_auth, get_telegram_user, login_required
 from .splits import calculate_splits
+from .balances import calculate_balances, calculate_settlements
 
 
 def home(request):
@@ -52,9 +53,23 @@ def create_pot(request):
 
 def pot_detail(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
-    members = pot.members.all()
-    drops = pot.drops.select_related('paid_by').order_by('-date', '-created_at')
-    return render(request, 'pot_detail.html', {'pot': pot, 'members': members, 'drops': drops})
+    members = list(pot.members.all())
+    drops = list(pot.drops.select_related('paid_by').prefetch_related('splits').order_by('-date', '-created_at'))
+    balances = calculate_balances(members, drops)
+    member_names = {m.id: m.name for m in members}
+    settlements = calculate_settlements(balances, member_names)
+    balance_rows = sorted(
+        [{'name': member_names[mid], 'amount': amt} for mid, amt in balances.items()],
+        key=lambda r: r['amount'],
+        reverse=True,
+    )
+    return render(request, 'pot_detail.html', {
+        'pot': pot,
+        'members': members,
+        'drops': drops,
+        'balance_rows': balance_rows,
+        'settlements': settlements,
+    })
 
 
 @login_required
