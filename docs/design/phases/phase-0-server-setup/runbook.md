@@ -62,26 +62,7 @@ Copy SSH key to new user:
 rsync --archive --chown=potdev:potdev ~/.ssh /home/potdev
 ```
 
-Disable password login and root login via SSH:
-
-```bash
-nano /etc/ssh/sshd_config
-```
-
-Set these values:
-
-```
-PermitRootLogin no
-PasswordAuthentication no
-```
-
-Restart SSH:
-
-```bash
-systemctl restart ssh
-```
-
-Open a new terminal and verify login as new user before closing the root session:
+Verify login as new user:
 
 ```bash
 ssh potdev@pot.respobit.eu
@@ -112,7 +93,7 @@ sudo systemctl start nginx
 Create a simple Hello page:
 
 ```bash
-sudo nano /var/www/html/index.html
+sudo vi /var/www/html/index.html
 ```
 
 Content:
@@ -151,13 +132,19 @@ Verify: open `https://pot.respobit.eu` in a mobile browser — should show the H
 
 ---
 
-## Step 7 — Install Python 3.12 and gunicorn
+## Step 7 — Install uv, Python 3.12 and gunicorn
 
-Python 3.12 is available in Ubuntu 24.04 default repos:
+Install uv:
 
 ```bash
-sudo apt install python3.12 python3.12-venv python3-pip -y
-python3 --version  # should print Python 3.12.x
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+```
+
+Install Python 3.12 via uv:
+
+```bash
+uv python install 3.12
 ```
 
 Create app directory and virtual environment:
@@ -165,9 +152,9 @@ Create app directory and virtual environment:
 ```bash
 mkdir -p ~/app
 cd ~/app
-python3 -m venv .venv
+uv venv --python 3.12
 source .venv/bin/activate
-pip install gunicorn
+uv pip install gunicorn
 ```
 
 ---
@@ -177,7 +164,7 @@ pip install gunicorn
 Create a minimal WSGI app:
 
 ```bash
-nano ~/app/hello.py
+vi ~/app/hello.py
 ```
 
 Content:
@@ -199,7 +186,7 @@ gunicorn --bind 127.0.0.1:8000 hello:application
 Configure nginx to proxy to gunicorn. Edit the nginx config:
 
 ```bash
-sudo nano /etc/nginx/sites-available/default
+sudo vi /etc/nginx/sites-available/default
 ```
 
 Replace the `location /` block with:

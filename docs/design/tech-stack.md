@@ -6,7 +6,7 @@ Mobile-first web application, accessible via browser on any device. No app insta
 
 ## Backend
 
-- **Python 3.12+**
+- **Python 3.12+** managed via **uv**
 - **Django 5.x** — full-stack web framework
   - Built-in ORM with migrations
   - Django templates for server-side rendering
