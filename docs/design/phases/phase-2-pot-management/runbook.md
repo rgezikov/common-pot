@@ -256,6 +256,8 @@ urlpatterns = [
 
 **[local]** Update `pots/templates/home.html`:
 
+> **Note on Telegram Login approach:** The Telegram Login Widget (popup-based) does not work reliably — modern browsers block the popup or the postMessage flow fails. The working approach is a **same-window redirect**: clicking "Login with Telegram" navigates the whole page to `oauth.telegram.org`. After authorisation, Telegram redirects back with `#tgAuthResult=<base64 JSON>` in the URL fragment. JavaScript on page load detects this fragment, decodes it, and submits the auth data to `/auth/telegram/` via a hidden form.
+
 ```html
 {% extends "base.html" %}
 {% block content %}
@@ -270,28 +272,68 @@ urlpatterns = [
             <li>
                 <a href="{% url 'pot_detail' pot.invite_token %}" class="block bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
                     <span class="font-medium">{{ pot.name }}</span>
-                    <span class="text-gray-400 text-sm ml-2">{{ pot.members.count }} members</span>
+                    <span class="text-gray-300 text-sm ml-2">{{ pot.members.count }} members</span>
                 </a>
             </li>
         {% endfor %}
         </ul>
     {% else %}
-        <p class="text-gray-400">No pots yet. Create one or join via an invite link.</p>
+        <p class="text-gray-300">No pots yet. Create one or join via an invite link.</p>
     {% endif %}
 {% else %}
     <div class="text-center mt-12">
         <h2 class="text-2xl font-bold mb-2">Common Pot</h2>
-        <p class="text-gray-400 mb-8">Track shared expenses with your group.</p>
-        <script async src="https://telegram.org/js/telegram-widget.js?22"
-            data-telegram-login="{{ TELEGRAM_BOT_NAME }}"
-            data-size="large"
-            data-auth-url="/auth/telegram/"
-            data-request-access="write">
+        <p class="text-gray-300 mb-8">Track shared expenses with your group.</p>
+        <button onclick="telegramLogin()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg text-base">
+            Login with Telegram
+        </button>
+        <script>
+        function submitTelegramAuth(userData) {
+            var form = document.createElement('form');
+            form.method = 'get';
+            form.action = '/auth/telegram/';
+            for (var key in userData) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = userData[key];
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Case 1: fragment redirect (first-time auth — Telegram sends #tgAuthResult=<base64>)
+        (function() {
+            var hash = window.location.hash;
+            if (hash && hash.startsWith('#tgAuthResult=')) {
+                try {
+                    var userData = JSON.parse(atob(hash.slice(14)));
+                    submitTelegramAuth(userData);
+                } catch(e) {}
+            }
+        })();
+
+        // Case 2: postMessage (subsequent auth, user already authorized bot)
+        window.addEventListener('message', function(e) {
+            if (e.origin !== 'https://oauth.telegram.org') return;
+            try {
+                var data = typeof e.data === 'string' ? JSON.parse(atob(e.data)) : e.data;
+                if (data && data.id) submitTelegramAuth(data);
+            } catch(e) {}
+        });
+
+        function telegramLogin() {
+            window.location.href = 'https://oauth.telegram.org/auth?bot_id={{ TELEGRAM_BOT_ID }}&origin={{ request.scheme }}%3A%2F%2F{{ request.get_host }}&request_access=write';
+        }
         </script>
     </div>
 {% endif %}
 {% endblock %}
 ```
+
+> **Note on `TELEGRAM_BOT_ID`:** This is the numeric bot ID (the part before `:` in the bot token). For `common_pot_bot` the bot ID is `8560416896`. You can hardcode it or add a `COMPOT_TELEGRAM_BOT_ID` env var and expose it via context processor.
 
 **[local]** Create `pots/templates/create_pot.html`:
 

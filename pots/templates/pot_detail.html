@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ pot.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">{{ pot.name }}</h2>
+    <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">← Home</a>
+</div>
+{% if pot.description %}
+    <p class="text-gray-300 text-sm mb-4">{{ pot.description }}</p>
+{% endif %}
+
+<div class="mb-6">
+    <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wide mb-2">Invite Link</h3>
+    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3 text-sm break-all">
+        {{ request.scheme }}://{{ request.get_host }}{% url 'join_pot' pot.invite_token %}
+    </div>
+</div>
+
+<div>
+    <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wide mb-2">Members</h3>
+    <ul class="space-y-2">
+    {% for member in members %}
+        <li class="bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+            {{ member.name }}
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}
