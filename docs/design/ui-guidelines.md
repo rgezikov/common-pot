@@ -4,9 +4,9 @@
 
 The app must be usable in a wide range of lighting conditions — from bright sunlight on a beach or boat deck to a dark cabin or bedroom at night. 
 
-- Support both **light mode** and **dark mode**
-- Follow the device's system preference by default (`prefers-color-scheme`)
-- Provide a manual toggle to override the system preference
+- **Dark mode by default** — the app launches in dark mode
+- Provide a manual toggle to switch to light mode (Phase 6)
+- Implemented via Tailwind's `class` dark mode strategy (`class="dark"` on `<html>`)
 - Colors must have sufficient contrast in both modes (WCAG AA minimum)
 
 ## Mobile-First
