@@ -32,6 +32,13 @@ Mobile-first web application, accessible via browser on any device. No app insta
   - Python 3.12 available in default repos
   - Security updates supported until 2029
 
+## Testing
+
+- **pytest** + **pytest-django** — test runner and Django integration
+- **GitHub Actions** — CI pipeline runs tests automatically on every push and pull request
+- Business logic must have unit tests; views and templates tested selectively
+- Test infrastructure introduced in Phase 3 (first business logic phase)
+
 ## Progressive Web App (future)
 
 - `manifest.json` + service worker can be added later to allow home screen installation and basic offline support
