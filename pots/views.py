@@ -266,6 +266,29 @@ def remove_member(request, token, member_id):
     return redirect('pot_detail', token=token)
 
 
+def pot_report(request, token):
+    pot = get_object_or_404(Pot, invite_token=token)
+    members = list(pot.members.all())
+    drops = list(pot.drops.select_related('paid_by').prefetch_related('splits__member').order_by('date', 'created_at'))
+    balances = calculate_balances(members, drops)
+    member_names = {m.id: m.name for m in members}
+    settlements = calculate_settlements(balances, member_names)
+    balance_rows = sorted(
+        [{'name': member_names[mid], **v} for mid, v in balances.items()],
+        key=lambda r: r['balance'],
+        reverse=True,
+    )
+    drops_total = sum(d.amount for d in drops)
+    return render(request, 'pot_report.html', {
+        'pot': pot,
+        'drops': drops,
+        'drops_total': drops_total,
+        'balance_rows': balance_rows,
+        'settlements': settlements,
+        'generated_date': datetime.date.today(),
+    })
+
+
 @login_required
 def rename_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)

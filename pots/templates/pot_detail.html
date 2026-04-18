@@ -3,11 +3,30 @@
 {% block content %}
 <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">{{ pot.name }}</h2>
-    <div class="flex gap-3">
-        <a href="{% url 'rename_pot' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">Settings</a>
+    <div class="flex items-center gap-3">
         <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
+        <div class="relative" id="pot-menu">
+            <button onclick="document.getElementById('pot-menu').classList.toggle('open')"
+                class="text-gray-400 hover:text-gray-200 px-2 py-1 text-lg leading-none">⋮</button>
+            <div class="pot-menu-dropdown hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10">
+                <a href="{% url 'rename_pot' pot.invite_token %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
+                <a href="{% url 'pot_report' pot.invite_token %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Report</a>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+document.getElementById('pot-menu').addEventListener('click', function(e) { e.stopPropagation(); });
+document.addEventListener('click', function() {
+    document.getElementById('pot-menu').classList.remove('open');
+    document.querySelector('.pot-menu-dropdown').classList.add('hidden');
+});
+document.querySelector('#pot-menu button').addEventListener('click', function() {
+    document.querySelector('.pot-menu-dropdown').classList.toggle('hidden');
+});
+</script>
 {% if pot.description %}
     <p class="text-gray-300 text-sm mb-4">{{ pot.description }}</p>
 {% endif %}
