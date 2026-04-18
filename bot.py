@@ -220,6 +220,10 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     sender = await sync_to_async(_get_or_create_member_sync)(pot, update.effective_user)
     paid_by = sender
     if parsed['payer_username']:
+        bot_username = (await context.bot.get_me()).username.lower()
+        if parsed['payer_username'] == bot_username:
+            await update.message.reply_text("❌ The bot cannot be the payer. Specify a member or omit @payer to use yourself.")
+            return
         match = next(
             (m for m in members if m.telegram_username == parsed['payer_username']),
             None,
