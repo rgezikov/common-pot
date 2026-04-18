@@ -18,4 +18,5 @@ urlpatterns = [
     path('pot/<uuid:token>/rename/', views.rename_pot, name='rename_pot'),
     path('pot/<uuid:token>/report/', views.pot_report, name='pot_report'),
     path('join/<uuid:token>/', views.join_pot, name='join_pot'),
+    path('help/', views.help_page, name='help'),
 ]

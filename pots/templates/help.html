@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Help — Common Pot{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">Help</h2>
+    <a href="{{ back_url }}" class="text-sm text-gray-400 hover:text-gray-200">↑ Back</a>
+</div>
+
+<div class="space-y-6 text-sm">
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">What is Common Pot?</h3>
+        <p class="text-gray-300">Common Pot tracks shared expenses for a group — trips, dinners, flat-shares. Everyone logs what they paid, and the app tells you who owes whom at the end.</p>
+    </section>
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Using the web app</h3>
+        <ol class="space-y-2 text-gray-300 list-decimal list-inside">
+            <li>Log in with Telegram on the home screen.</li>
+            <li>Create a pot or join one via an invite link.</li>
+            <li>Add drops (expenses) with an amount, description, and who paid.</li>
+            <li>Set split weights per member — leave all blank or put the same number to split equally.</li>
+            <li>Check balances and settlement suggestions on the pot page.</li>
+            <li>Share the invite link from Settings so others can join.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Using the Telegram bot</h3>
+        <p class="text-gray-300 mb-2">Add <span class="font-mono text-gray-200">@common_pot_bot</span> to a group chat, then:</p>
+        <ul class="space-y-1 text-gray-300">
+            <li><span class="font-mono text-gray-200">/pot new</span> — create a new pot for this group</li>
+            <li><span class="font-mono text-gray-200">/pot &lt;invite_link&gt;</span> — link an existing pot (invite link from Settings)</li>
+            <li><span class="font-mono text-gray-200">/link</span> — get the web app links (Open and Join)</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner</span> — log a drop paid by you</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner @alice</span> — log a drop paid by @alice</li>
+            <li><span class="font-mono text-gray-200">/drop =120-15 taxi</span> — amount as a formula</li>
+            <li><span class="font-mono text-gray-200">/balance</span> — show member balances</li>
+            <li><span class="font-mono text-gray-200">/settle</span> — show settlement suggestions</li>
+            <li><span class="font-mono text-gray-200">/help</span> — show this command list in chat</li>
+        </ul>
+        <p class="text-gray-400 mt-2">Drops added via the web app trigger a notification in the linked group chat.</p>
+    </section>
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Tips</h3>
+        <ul class="space-y-1 text-gray-300 list-disc list-inside">
+            <li>On mobile, open pot links directly in Telegram — no login needed.</li>
+            <li>Use formulas like <span class="font-mono text-gray-200">=200/3</span> or <span class="font-mono text-gray-200">=120-15</span> in the amount field.</li>
+            <li>Leave all weights blank or put the same number to split equally.</li>
+            <li>Set a member's weight to 0 to exclude them from a specific drop.</li>
+        </ul>
+    </section>
+
+</div>
+{% endblock %}

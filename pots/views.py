@@ -287,6 +287,11 @@ def remove_member(request, token, member_id):
     return redirect('pot_detail', token=token)
 
 
+def help_page(request):
+    back_url = request.GET.get('back', '/')
+    return render(request, 'help.html', {'back_url': back_url})
+
+
 def pot_report(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     members = list(pot.members.all())

@@ -3,8 +3,27 @@
 {% if user %}
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold">Hello, {{ user.first_name }}</h2>
-        <a href="{% url 'create_pot' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">+ New Pot</a>
+        <div class="relative" id="home-menu">
+            <button class="text-gray-400 hover:text-gray-200 px-2 py-1 text-lg leading-none">⋮</button>
+            <div class="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10">
+                <a href="{% url 'create_pot' %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">New Pot</a>
+                <a href="{% url 'help' %}?back=/"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
+            </div>
+        </div>
     </div>
+    <script>
+    (function() {
+        var menu = document.getElementById('home-menu');
+        var dropdown = menu.querySelector('div');
+        menu.querySelector('button').addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function() { dropdown.classList.add('hidden'); });
+    })();
+    </script>
     {% if pots %}
         <ul class="space-y-3">
         {% for pot in pots %}

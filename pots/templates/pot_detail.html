@@ -13,6 +13,8 @@
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
                 <a href="{% url 'pot_report' pot.invite_token %}"
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Report</a>
+                <a href="{% url 'help' %}?back=/pot/{{ pot.invite_token }}/"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
             </div>
         </div>
     </div>
