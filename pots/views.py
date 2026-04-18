@@ -359,6 +359,15 @@ def _sync_member_username(member, user):
 
 
 @login_required
+def delete_pot(request, token):
+    pot = get_object_or_404(Pot, invite_token=token)
+    if request.method == 'POST':
+        pot.delete()
+        return redirect('home')
+    return redirect('rename_pot', token=token)
+
+
+@login_required
 def join_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     user = get_telegram_user(request)

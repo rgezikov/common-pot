@@ -51,4 +51,16 @@ function copyInviteLink() {
         Save
     </button>
 </form>
+
+<div class="mt-8 border-t border-gray-700 pt-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Danger Zone</h3>
+    <form method="post" action="{% url 'delete_pot' pot.invite_token %}"
+          onsubmit="return confirm('Delete pot \'{{ pot.name|escapejs }}\'? This will permanently remove all drops and cannot be undone.')">
+        {% csrf_token %}
+        <button type="submit"
+            class="w-full bg-red-700 hover:bg-red-600 text-white font-medium py-3 rounded-lg text-base">
+            Delete Pot
+        </button>
+    </form>
+</div>
 {% endblock %}
