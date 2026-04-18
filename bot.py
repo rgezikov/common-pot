@@ -115,6 +115,22 @@ def _create_drop_sync(pot, description, amount, paid_by, splits):
 
 # --- Handlers ---
 
+async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/help — list available commands."""
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=(
+            "*Common Pot commands*\n\n"
+            "/pot new — create a new pot for this group\n"
+            "/pot <invite\\_token> — link an existing pot\n"
+            "/link — get the web app link\n"
+            "/drop <amount> <description> — log an expense\n"
+            "/balance — show member balances\n"
+            "/settle — show settlement suggestions"
+        ),
+        parse_mode='Markdown',
+    )
+
 async def on_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Bot added to a group — show instructions."""
     bot_id = context.bot.id
@@ -309,6 +325,7 @@ def main():
 
     app = Application.builder().token(token).build()
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, on_new_member))
+    app.add_handler(CommandHandler('help', cmd_help))
     app.add_handler(CommandHandler('pot', cmd_pot))
     app.add_handler(CommandHandler('link', cmd_start))
     app.add_handler(CommandHandler('drop', cmd_drop))
