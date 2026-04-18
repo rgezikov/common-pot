@@ -24,8 +24,9 @@ pot directly inside Telegram.
 
 ## Tasks
 
-- Add a Mini App entry point to the bot (`/open` command or inline button)
 - Verify Telegram WebApp `initData` on the server (HMAC-SHA256, same key as OAuth)
-- Replace OAuth login with WebApp auth when running inside Telegram Mini App
+- When running inside Telegram WebView, authenticate via `initData` instead of OAuth
   (keep OAuth as fallback for desktop/direct browser access)
-- Bot sends an inline keyboard button "Open pot" that launches the Mini App
+- Both existing links from `/link` must work without a login screen:
+  - **Open pot** (`/pot/<token>/`) — already public, no change needed
+  - **Join pot** (`/join/<token>/`) — currently fails in WebView; needs WebApp auth
