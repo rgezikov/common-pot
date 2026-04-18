@@ -32,8 +32,10 @@
             <li><span class="font-mono text-gray-200">/pot new</span> — create a new pot for this group</li>
             <li><span class="font-mono text-gray-200">/pot &lt;invite_link&gt;</span> — link an existing pot (invite link from Settings)</li>
             <li><span class="font-mono text-gray-200">/link</span> — get the web app links (Open and Join)</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner</span> — log a drop paid by you</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner @alice</span> — log a drop paid by @alice</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner</span> — log a drop, split equally, paid by you</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner /paid @alice</span> — paid by @alice</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner /split @alice:2, @bob:1</span> — custom weights</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner /paid @alice /split @alice:2, @bob:1</span> — paid by @alice, custom split</li>
             <li><span class="font-mono text-gray-200">/drop =120-15 taxi</span> — amount as a formula</li>
             <li><span class="font-mono text-gray-200">/balance</span> — show member balances</li>
             <li><span class="font-mono text-gray-200">/settle</span> — show settlement suggestions</li>
