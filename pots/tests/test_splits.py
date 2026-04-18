@@ -22,8 +22,8 @@ def test_equal_split_three_members():
 def test_weighted_split():
     result = calculate_splits(Decimal('100.00'), {1: 2, 2: 1})
     assert result[1] + result[2] == Decimal('100.00')
-    assert result[1] == Decimal('66.66')
-    assert result[2] == Decimal('33.34')
+    assert result[1] == Decimal('66.67')
+    assert result[2] == Decimal('33.33')
 
 
 def test_zero_weight_excluded():

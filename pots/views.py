@@ -104,6 +104,7 @@ def add_drop(request, token):
     current_member = next((m for m in members if m.telegram_user_id == user['id']), None)
     if current_member is None:
         return redirect('pot_detail', token=token)
+    _sync_member_username(current_member, user)
 
     if request.method == 'POST':
         fields, errors = _parse_drop_form(request, members)
@@ -349,16 +350,26 @@ def rename_pot(request, token):
     return render(request, 'rename_pot.html', {'pot': pot})
 
 
+def _sync_member_username(member, user):
+    """Update telegram_username if the user has set or changed it since joining."""
+    username = user.get('username', '').lower()
+    if username and member.telegram_username != username:
+        member.telegram_username = username
+        member.save(update_fields=['telegram_username'])
+
+
 @login_required
 def join_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     user = get_telegram_user(request)
-    Member.objects.get_or_create(
+    member, created = Member.objects.get_or_create(
         pot=pot,
         telegram_user_id=user['id'],
         defaults={
             'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
-            'telegram_username': user.get('username', ''),
+            'telegram_username': user.get('username', '').lower(),
         },
     )
+    if not created:
+        _sync_member_username(member, user)
     return redirect('pot_detail', token=pot.invite_token)

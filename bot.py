@@ -21,7 +21,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from pots.models import Pot, Member, Drop, Split
 from pots.splits import calculate_splits
 from pots.balances import calculate_balances, calculate_settlements
-from pots.bot_parser import parse_drop_command
+from pots.bot_parser import parse_drop_command, resolve_member_specs
 from decimal import Decimal
 
 logging.basicConfig(level=logging.INFO)
@@ -124,7 +124,7 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/pot new — create a new pot for this group\n"
             "/pot <invite\\_token> — link an existing pot\n"
             "/link — get the web app link\n"
-            "/drop <amount> <description> — log an expense\n"
+            "/drop <amount> [description] [/paid @user] [/split @user:weight, ...] — log an expense\n"
             "/balance — show member balances\n"
             "/settle — show settlement suggestions"
         ),
@@ -236,7 +236,7 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parsed = parse_drop_command(text)
     except ValueError as e:
         await update.message.reply_text(
-            f"❌ {e}\n\nUsage: /drop <amount> <description> [@payer]"
+            f"❌ {e}\n\nUsage: /drop <amount> [description] [/paid <name>] [/split <name:weight>, ...]"
         )
         return
 
@@ -246,34 +246,30 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     sender = await sync_to_async(_get_or_create_member_sync)(pot, update.effective_user)
-    paid_by = sender
-    if parsed['payer_username']:
-        bot_username = (await context.bot.get_me()).username.lower()
-        if parsed['payer_username'] == bot_username:
-            await update.message.reply_text("❌ The bot cannot be the payer. Specify a member or omit @payer to use yourself.")
-            return
-        match = next(
-            (m for m in members if m.telegram_username == parsed['payer_username']),
-            None,
+    description, custom_weights, paid_by_spec = resolve_member_specs(parsed['tokens'], members)
+    paid_by = paid_by_spec or sender
+    if not description:
+        await update.message.reply_text(
+            "❌ Description is required\n\nUsage: /drop <amount> <description> [paid:name] [member:weight ...] [@payer]"
         )
-        if match:
-            paid_by = match
-        else:
-            await update.message.reply_text(
-                f"❌ @{parsed['payer_username']} is not a member of this pot."
-            )
-            return
+        return
 
-    weights = {m.id: Decimal('1') for m in members}
+    if custom_weights:
+        weights = custom_weights
+        split_note = f"Custom split among {len(weights)} members"
+    else:
+        weights = {m.id: Decimal('1') for m in members}
+        share = calculate_splits(parsed['amount'], weights).get(sender.id, Decimal('0'))
+        split_note = f"Split equally among {len(weights)} members ({share} each)"
+
     splits = calculate_splits(parsed['amount'], weights)
 
-    await sync_to_async(_create_drop_sync)(pot, parsed['description'], parsed['amount'], paid_by, splits)
+    await sync_to_async(_create_drop_sync)(pot, description, parsed['amount'], paid_by, splits)
 
-    share = splits.get(sender.id, Decimal('0'))
     await update.message.reply_text(
-        f"✅ *{parsed['description']}* — {parsed['amount']}\n"
+        f"✅ *{description}* — {parsed['amount']}\n"
         f"Paid by: {paid_by.name}\n"
-        f"Split equally among {len(splits)} members ({share} each)",
+        f"{split_note}",
         parse_mode='Markdown',
     )
 

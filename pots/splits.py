@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_HALF_UP
 
 
 def calculate_splits(amount: Decimal, weights: dict) -> dict:
@@ -27,7 +27,7 @@ def calculate_splits(amount: Decimal, weights: dict) -> dict:
     members = list(active.keys())
 
     for member_id in members[:-1]:
-        share = (active[member_id] / total_weight * amount).quantize(cent, rounding=ROUND_DOWN)
+        share = (active[member_id] / total_weight * amount).quantize(cent, rounding=ROUND_HALF_UP)
         shares[member_id] = share
         allocated += share
 
