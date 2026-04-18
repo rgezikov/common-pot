@@ -1,0 +1,14 @@
+[Unit]
+Description=Common Pot Telegram Bot
+After=network.target
+
+[Service]
+User=potdev
+WorkingDirectory=/home/potdev/app
+EnvironmentFile=/home/potdev/app/.env
+ExecStart=/home/potdev/app/.venv/bin/python bot.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

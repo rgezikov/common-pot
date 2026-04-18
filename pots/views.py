@@ -48,6 +48,7 @@ def create_pot(request):
                 pot=pot,
                 telegram_user_id=user['id'],
                 name=f"{user['first_name']} {user.get('last_name', '')}".strip(),
+                telegram_username=user.get('username', ''),
             )
             return redirect('pot_detail', token=pot.invite_token)
     return render(request, 'create_pot.html')
@@ -309,6 +310,9 @@ def join_pot(request, token):
     Member.objects.get_or_create(
         pot=pot,
         telegram_user_id=user['id'],
-        defaults={'name': f"{user['first_name']} {user.get('last_name', '')}".strip()},
+        defaults={
+            'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
+            'telegram_username': user.get('username', ''),
+        },
     )
     return redirect('pot_detail', token=pot.invite_token)
