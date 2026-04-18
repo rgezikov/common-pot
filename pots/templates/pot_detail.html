@@ -5,7 +5,7 @@
     <h2 class="text-lg font-semibold">{{ pot.name }}</h2>
     <div class="flex gap-3">
         <a href="{% url 'rename_pot' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">Settings</a>
-        <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">← Home</a>
+        <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
     </div>
 </div>
 {% if pot.description %}
