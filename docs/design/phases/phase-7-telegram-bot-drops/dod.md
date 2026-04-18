@@ -4,7 +4,7 @@
 - [x] `/pot new` creates a new pot linked to the group chat
 - [x] `/pot <token>` links an existing pot — accepts both UUID and full invite URL
 - [x] One pot per group chat; one group per pot (enforced)
-- [x] `/start` and `/invite` reply with the web invite link for the linked pot
+- [x] `/link` replies with the web invite link for the linked pot
 - [x] `/drop <amount> <description>` logs a drop, paid by sender, split equally among all members
 - [x] `/drop <amount> <description> @payer` logs a drop paid by the specified member
 - [x] Description may be quoted with single or double quotes

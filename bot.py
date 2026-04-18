@@ -114,8 +114,10 @@ async def on_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "👋 Common Pot is here!\n\n"
                 "To get started:\n"
                 "• /pot new — create a new pot for this group\n"
-                "• /pot <invite\\_token> — link an existing pot from the web app\n\n"
-                "Once linked, use /drop to log expenses.",
+                "• /pot <invite\\_url> — link an existing pot from the web app\n\n"
+                "Once linked:\n"
+                "• /link — get the web app invite link\n"
+                "• /drop — log an expense",
                 parse_mode='Markdown',
             )
 
@@ -151,7 +153,7 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"✅ Pot *{pot.name}* created!\n"
             f"Join the web app: {invite_url}\n\n"
-            f"Use /drop to log expenses.",
+            f"Use /link to get the invite link, /drop to log expenses.",
             parse_mode='Markdown',
         )
     else:
@@ -163,7 +165,7 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"✅ Linked to pot *{pot.name}*!\n"
             f"Join the web app: {invite_url}\n\n"
-            f"Use /drop to log expenses.",
+            f"Use /link to get the invite link, /drop to log expenses.",
             parse_mode='Markdown',
         )
 
@@ -252,8 +254,7 @@ def main():
     app = Application.builder().token(token).build()
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, on_new_member))
     app.add_handler(CommandHandler('pot', cmd_pot))
-    app.add_handler(CommandHandler('start', cmd_start))
-    app.add_handler(CommandHandler('invite', cmd_start))
+    app.add_handler(CommandHandler('link', cmd_start))
     app.add_handler(CommandHandler('drop', cmd_drop))
 
     logger.info("Bot starting...")
