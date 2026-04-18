@@ -6,6 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('auth/telegram/', views.telegram_login, name='telegram_login'),
+    path('auth/webapp/', views.webapp_auth, name='webapp_auth'),
     path('logout/', views.logout, name='logout'),
     path('pot/new/', views.create_pot, name='create_pot'),
     path('pot/<uuid:token>/', views.pot_detail, name='pot_detail'),

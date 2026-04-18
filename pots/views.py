@@ -2,9 +2,11 @@ import ast
 import datetime
 import operator
 from decimal import Decimal, InvalidOperation
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from .models import Pot, Member, Drop, Split
-from .telegram_auth import verify_telegram_auth, get_telegram_user, login_required
+from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
 from .telegram_notify import notify_drop_added
@@ -35,6 +37,20 @@ def telegram_login(request):
 def logout(request):
     request.session.flush()
     return redirect('home')
+
+
+@csrf_exempt
+def webapp_auth(request):
+    """Authenticate via Telegram WebApp initData (used by Mini App / WebView)."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    init_data = request.POST.get('init_data', '')
+    user = verify_telegram_webapp_auth(init_data)
+    if not user:
+        return JsonResponse({'ok': False}, status=403)
+    request.session['telegram_user'] = user
+    next_url = request.session.pop('next', None)
+    return JsonResponse({'ok': True, 'next': next_url})
 
 
 @login_required

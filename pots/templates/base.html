@@ -14,9 +14,26 @@
         }
     })();
     </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
+    {% if not request.session.telegram_user %}
+    <script>
+    (function() {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (!tg || !tg.initData) return;
+        tg.ready();
+        fetch('/auth/webapp/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'init_data=' + encodeURIComponent(tg.initData),
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) window.location.href = data.next || window.location.href;
+        });
+    })();
+    </script>
+    {% endif %}
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
     <header class="bg-white dark:bg-gray-800 shadow px-4 py-3 flex items-center justify-between">
