@@ -7,6 +7,7 @@ from .models import Pot, Member, Drop, Split
 from .telegram_auth import verify_telegram_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
+from .telegram_notify import notify_drop_added
 
 
 def home(request):
@@ -104,15 +105,18 @@ def add_drop(request, token):
             )
             for member_id, share in fields['splits'].items():
                 Split.objects.create(drop=drop, member_id=member_id, amount=share)
+            notify_drop_added(pot, drop)
             return redirect('pot_detail', token=token)
 
         return render(request, 'add_drop.html', {
             'pot': pot, 'members': members,
+            'current_member': current_member,
             'errors': errors, 'today': datetime.date.today().isoformat(),
         })
 
     return render(request, 'add_drop.html', {
         'pot': pot, 'members': members,
+        'current_member': current_member,
         'today': datetime.date.today().isoformat(),
     })
 

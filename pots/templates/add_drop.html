@@ -39,7 +39,11 @@
         <select name="paid_by"
             class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
             {% for member in members %}
-                <option value="{{ member.id }}" {% if request.POST.paid_by == member.id|stringformat:"s" %}selected{% endif %}>{{ member.name }}</option>
+                <option value="{{ member.id }}"
+                    {% if request.POST.paid_by == member.id|stringformat:"s" %}selected
+                    {% elif not request.POST and current_member.id == member.id %}selected{% endif %}>
+                    {{ member.name }}
+                </option>
             {% endfor %}
         </select>
     </div>

@@ -20,6 +20,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 from pots.models import Pot, Member, Drop, Split
 from pots.splits import calculate_splits
+from pots.balances import calculate_balances, calculate_settlements
 from pots.bot_parser import parse_drop_command
 from decimal import Decimal
 
@@ -89,6 +90,15 @@ def _get_members_sync(pot: Pot):
     return list(pot.members.all())
 
 
+def _get_balances_sync(pot: Pot):
+    members = list(pot.members.all())
+    drops = list(pot.drops.select_related('paid_by').prefetch_related('splits').all())
+    balances = calculate_balances(members, drops)
+    member_names = {m.id: m.name for m in members}
+    settlements = calculate_settlements(balances, member_names)
+    return balances, member_names, settlements
+
+
 def _create_drop_sync(pot, description, amount, paid_by, splits):
     drop = Drop.objects.create(
         pot=pot,
@@ -144,7 +154,7 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if existing:
             invite_url = f"{SITE_URL}/join/{existing.invite_token}/"
             await update.message.reply_text(
-                f"This group is already linked to pot *{existing.name}*.\n{invite_url}",
+                f"This group is already linked to pot *{existing.name}*.\n[Join the web app]({invite_url})",
                 parse_mode='Markdown',
             )
             return
@@ -152,7 +162,7 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
         await update.message.reply_text(
             f"✅ Pot *{pot.name}* created!\n"
-            f"Join the web app: {invite_url}\n\n"
+            f"[Join the web app]({invite_url})\n\n"
             f"Use /link to get the invite link, /drop to log expenses.",
             parse_mode='Markdown',
         )
@@ -164,7 +174,7 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
         await update.message.reply_text(
             f"✅ Linked to pot *{pot.name}*!\n"
-            f"Join the web app: {invite_url}\n\n"
+            f"[Join the web app]({invite_url})\n\n"
             f"Use /link to get the invite link, /drop to log expenses.",
             parse_mode='Markdown',
         )
@@ -182,9 +192,11 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown',
         )
         return
-    invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
-    await update.message.reply_text(
-        f"Pot: *{pot.name}*\nJoin the web app: {invite_url}",
+    join_url = f"{SITE_URL}/join/{pot.invite_token}/"
+    open_url = f"{SITE_URL}/pot/{pot.invite_token}/"
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Pot: *{pot.name}*\n[Open pot]({open_url}) · [Join pot]({join_url})",
         parse_mode='Markdown',
     )
 
@@ -250,6 +262,46 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_balances(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/balance — show per-member balance summary."""
+    if update.effective_chat.type == 'private':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Use /balance in a group chat.")
+        return
+    pot = await sync_to_async(_get_pot_for_chat_sync)(update.effective_chat.id)
+    if not pot:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="No pot linked. Use /pot new or /pot <invite\\_url>.", parse_mode='Markdown')
+        return
+    balances, member_names, _ = await sync_to_async(_get_balances_sync)(pot)
+    if not balances:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="No members in this pot yet.")
+        return
+    rows = sorted(balances.items(), key=lambda x: x[1]['balance'], reverse=True)
+    lines = [f"*{pot.name}* — Balances\n"]
+    for mid, v in rows:
+        sign = '+' if v['balance'] > 0 else ''
+        lines.append(f"{member_names[mid]}: {sign}{v['balance']} (paid {v['paid']}, owed {v['owed']})")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text='\n'.join(lines), parse_mode='Markdown')
+
+
+async def cmd_settle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/settle — show settlement suggestions."""
+    if update.effective_chat.type == 'private':
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Use /settle in a group chat.")
+        return
+    pot = await sync_to_async(_get_pot_for_chat_sync)(update.effective_chat.id)
+    if not pot:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="No pot linked. Use /pot new or /pot <invite\\_url>.", parse_mode='Markdown')
+        return
+    _, _, settlements = await sync_to_async(_get_balances_sync)(pot)
+    if not settlements:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ All settled up!")
+        return
+    lines = [f"*{pot.name}* — Settlements\n"]
+    for s in settlements:
+        lines.append(f"{s['from_name']} pays {s['to_name']}: {s['amount']}")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text='\n'.join(lines), parse_mode='Markdown')
+
+
 def main():
     token = settings.TELEGRAM_BOT_TOKEN
     if not token:
@@ -260,6 +312,8 @@ def main():
     app.add_handler(CommandHandler('pot', cmd_pot))
     app.add_handler(CommandHandler('link', cmd_start))
     app.add_handler(CommandHandler('drop', cmd_drop))
+    app.add_handler(CommandHandler('balance', cmd_balances))
+    app.add_handler(CommandHandler('settle', cmd_settle))
 
     logger.info("Bot starting...")
     app.run_polling()
