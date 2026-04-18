@@ -2,7 +2,7 @@ import ast
 import datetime
 import operator
 from decimal import Decimal, InvalidOperation
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from .models import Pot, Member, Drop, Split
@@ -285,6 +285,27 @@ def remove_member(request, token, member_id):
         if not has_drops:
             member.delete()
     return redirect('pot_detail', token=token)
+
+
+def service_worker(request):
+    """Minimal service worker — required for Chrome Android Add to Home Screen."""
+    js = "self.addEventListener('fetch', function(e) {});"
+    return HttpResponse(js, content_type='application/javascript')
+
+
+def pot_manifest(request, token):
+    """Web app manifest for adding a pot to the home screen."""
+    pot = get_object_or_404(Pot, invite_token=token)
+    import json as _json
+    manifest = {
+        'name': pot.name,
+        'short_name': pot.name,
+        'start_url': f'/pot/{token}/',
+        'display': 'standalone',
+        'background_color': '#111827',
+        'theme_color': '#111827',
+    }
+    return JsonResponse(manifest, content_type='application/manifest+json')
 
 
 def help_page(request):

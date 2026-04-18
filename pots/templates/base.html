@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Common Pot{% endblock %}</title>
+    {% block head %}{% endblock %}
     <script>
     // Apply theme before page renders to avoid flash
     (function() {
@@ -61,6 +62,11 @@
             html.classList.add('dark');
             localStorage.setItem('theme', 'dark');
         }
+    }
+    </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
     }
     </script>
 </body>

@@ -10,6 +10,7 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('pot/new/', views.create_pot, name='create_pot'),
     path('pot/<uuid:token>/', views.pot_detail, name='pot_detail'),
+    path('pot/<uuid:token>/manifest.json', views.pot_manifest, name='pot_manifest'),
     path('pot/<uuid:token>/drop/new/', views.add_drop, name='add_drop'),
     path('pot/<uuid:token>/drop/<int:drop_id>/', views.drop_detail, name='drop_detail'),
     path('pot/<uuid:token>/drop/<int:drop_id>/edit/', views.edit_drop, name='edit_drop'),
@@ -19,4 +20,5 @@ urlpatterns = [
     path('pot/<uuid:token>/report/', views.pot_report, name='pot_report'),
     path('join/<uuid:token>/', views.join_pot, name='join_pot'),
     path('help/', views.help_page, name='help'),
+    path('sw.js', views.service_worker, name='service_worker'),
 ]
