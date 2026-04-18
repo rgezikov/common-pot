@@ -63,14 +63,16 @@ def pot_detail(request, token):
     member_names = {m.id: m.name for m in members}
     settlements = calculate_settlements(balances, member_names)
     balance_rows = sorted(
-        [{'name': member_names[mid], 'amount': amt} for mid, amt in balances.items()],
-        key=lambda r: r['amount'],
+        [{'name': member_names[mid], **v} for mid, v in balances.items()],
+        key=lambda r: r['balance'],
         reverse=True,
     )
+    drops_total = sum(d.amount for d in drops)
     return render(request, 'pot_detail.html', {
         'pot': pot,
         'members': members,
         'drops': drops,
+        'drops_total': drops_total,
         'balance_rows': balance_rows,
         'settlements': settlements,
     })

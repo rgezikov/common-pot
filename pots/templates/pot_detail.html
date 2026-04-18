@@ -16,11 +16,19 @@
     <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Balances</h3>
     {% if balance_rows %}
         <ul class="space-y-2 mb-4">
+            <li class="flex text-xs text-gray-400 px-4 pb-1">
+                <span class="flex-1">Member</span>
+                <span class="w-20 text-right">Paid</span>
+                <span class="w-20 text-right">Owed</span>
+                <span class="w-20 text-right">Balance</span>
+            </li>
         {% for row in balance_rows %}
-            <li class="flex justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
-                <span>{{ row.name }}</span>
-                <span class="font-semibold {% if row.amount > 0 %}text-green-400{% elif row.amount < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
-                    {% if row.amount > 0 %}+{% endif %}{{ row.amount }}
+            <li class="flex items-center bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+                <span class="flex-1">{{ row.name }}</span>
+                <span class="w-20 text-right text-gray-400">{{ row.paid }}</span>
+                <span class="w-20 text-right text-gray-400">{{ row.owed }}</span>
+                <span class="w-20 text-right font-semibold {% if row.balance > 0 %}text-green-400{% elif row.balance < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                    {% if row.balance > 0 %}+{% endif %}{{ row.balance }}
                 </span>
             </li>
         {% endfor %}
@@ -47,7 +55,9 @@
 
 <div class="mb-6">
     <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">Drops</h3>
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">
+            Drops{% if drops_total %} <span class="font-semibold text-gray-200 normal-case">{{ drops_total }}</span>{% endif %}
+        </h3>
         <a href="{% url 'add_drop' pot.invite_token %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-lg">+ Add Drop</a>
     </div>
     {% if drops %}
@@ -67,23 +77,5 @@
     {% else %}
         <p class="text-gray-400 text-sm">No drops yet.</p>
     {% endif %}
-</div>
-
-<div>
-    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Members</h3>
-    <ul class="space-y-2">
-    {% for member in members %}
-        <li class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
-            <span>{{ member.name }}</span>
-            {% if member.can_remove %}
-                <form method="post" action="{% url 'remove_member' pot.invite_token member.id %}"
-                    onsubmit="return confirm('Remove {{ member.name }} from this pot?')">
-                    {% csrf_token %}
-                    <button type="submit" class="text-xs text-red-400 hover:text-red-300">Remove</button>
-                </form>
-            {% endif %}
-        </li>
-    {% endfor %}
-    </ul>
 </div>
 {% endblock %}

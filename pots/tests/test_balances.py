@@ -36,40 +36,44 @@ def test_single_payer_two_members_equal():
         make_split(1, '50.00'),
         make_split(2, '50.00'),
     ])
-    balances = calculate_balances([alice, bob], [drop])
-    assert balances[1] == Decimal('50.00')   # Alice paid 100, owes 50 → +50
-    assert balances[2] == Decimal('-50.00')  # Bob paid 0, owes 50 → -50
+    b = calculate_balances([alice, bob], [drop])
+    assert b[1]['paid'] == Decimal('100.00')
+    assert b[1]['owed'] == Decimal('50.00')
+    assert b[1]['balance'] == Decimal('50.00')
+    assert b[2]['paid'] == Decimal('0')
+    assert b[2]['owed'] == Decimal('50.00')
+    assert b[2]['balance'] == Decimal('-50.00')
 
 
 def test_two_drops_different_payers():
     alice, bob = make_member(1, 'Alice'), make_member(2, 'Bob')
     drop1 = make_drop(1, '60.00', [make_split(1, '30.00'), make_split(2, '30.00')])
     drop2 = make_drop(2, '40.00', [make_split(1, '20.00'), make_split(2, '20.00')])
-    balances = calculate_balances([alice, bob], [drop1, drop2])
-    assert balances[1] == Decimal('10.00')   # paid 60, owes 50
-    assert balances[2] == Decimal('-10.00')  # paid 40, owes 30... wait: paid 40, owes 50 → -10
+    b = calculate_balances([alice, bob], [drop1, drop2])
+    assert b[1]['balance'] == Decimal('10.00')
+    assert b[2]['balance'] == Decimal('-10.00')
 
 
 def test_zero_balance_when_everyone_pays_own_share():
     alice, bob = make_member(1, 'Alice'), make_member(2, 'Bob')
     drop1 = make_drop(1, '50.00', [make_split(1, '50.00')])
     drop2 = make_drop(2, '50.00', [make_split(2, '50.00')])
-    balances = calculate_balances([alice, bob], [drop1, drop2])
-    assert balances[1] == Decimal('0.00')
-    assert balances[2] == Decimal('0.00')
+    b = calculate_balances([alice, bob], [drop1, drop2])
+    assert b[1]['balance'] == Decimal('0')
+    assert b[2]['balance'] == Decimal('0')
 
 
 def test_no_drops_all_zero():
     alice, bob = make_member(1, 'Alice'), make_member(2, 'Bob')
-    balances = calculate_balances([alice, bob], [])
-    assert balances[1] == Decimal('0')
-    assert balances[2] == Decimal('0')
+    b = calculate_balances([alice, bob], [])
+    assert b[1] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'balance': Decimal('0')}
+    assert b[2] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'balance': Decimal('0')}
 
 
 # --- Settlement tests ---
 
 def test_settlement_simple():
-    balances = {1: Decimal('50.00'), 2: Decimal('-50.00')}
+    balances = {1: {'balance': Decimal('50.00')}, 2: {'balance': Decimal('-50.00')}}
     names = {1: 'Alice', 2: 'Bob'}
     result = calculate_settlements(balances, names)
     assert len(result) == 1
@@ -77,30 +81,38 @@ def test_settlement_simple():
 
 
 def test_settlement_three_members():
-    balances = {1: Decimal('60.00'), 2: Decimal('-10.00'), 3: Decimal('-50.00')}
+    balances = {
+        1: {'balance': Decimal('60.00')},
+        2: {'balance': Decimal('-10.00')},
+        3: {'balance': Decimal('-50.00')},
+    }
     names = {1: 'Alice', 2: 'Bob', 3: 'Carol'}
     result = calculate_settlements(balances, names)
     total_transferred = sum(t['amount'] for t in result)
     assert total_transferred == Decimal('60.00')
-    assert len(result) <= 2  # at most N-1 transfers
+    assert len(result) <= 2
 
 
 def test_settlement_already_balanced():
-    balances = {1: Decimal('0.00'), 2: Decimal('0.00')}
+    balances = {1: {'balance': Decimal('0.00')}, 2: {'balance': Decimal('0.00')}}
     names = {1: 'Alice', 2: 'Bob'}
     result = calculate_settlements(balances, names)
     assert result == []
 
 
 def test_settlement_total_transfers_equal_total_credit():
-    balances = {1: Decimal('100.00'), 2: Decimal('-30.00'), 3: Decimal('-70.00')}
+    balances = {
+        1: {'balance': Decimal('100.00')},
+        2: {'balance': Decimal('-30.00')},
+        3: {'balance': Decimal('-70.00')},
+    }
     names = {1: 'Alice', 2: 'Bob', 3: 'Carol'}
     result = calculate_settlements(balances, names)
     assert sum(t['amount'] for t in result) == Decimal('100.00')
 
 
 def test_settlement_amounts_are_positive():
-    balances = {1: Decimal('25.00'), 2: Decimal('-25.00')}
+    balances = {1: {'balance': Decimal('25.00')}, 2: {'balance': Decimal('-25.00')}}
     names = {1: 'Alice', 2: 'Bob'}
     result = calculate_settlements(balances, names)
     assert all(t['amount'] > 0 for t in result)

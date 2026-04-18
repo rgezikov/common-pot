@@ -3,27 +3,28 @@ from decimal import Decimal
 
 def calculate_balances(members, drops):
     """
-    Calculate each member's balance.
-
-    balance = total paid - total owed
+    Calculate each member's paid, owed, and net balance.
 
     Args:
         members: iterable of Member objects
         drops: iterable of Drop objects with prefetched splits and paid_by
 
     Returns:
-        dict of {member_id: Decimal balance}
+        dict of {member_id: {'paid': Decimal, 'owed': Decimal, 'balance': Decimal}}
     """
-    balances = {m.id: Decimal('0') for m in members}
+    data = {m.id: {'paid': Decimal('0'), 'owed': Decimal('0')} for m in members}
 
     for drop in drops:
-        if drop.paid_by_id in balances:
-            balances[drop.paid_by_id] += drop.amount
+        if drop.paid_by_id in data:
+            data[drop.paid_by_id]['paid'] += drop.amount
         for split in drop.splits.all():
-            if split.member_id in balances:
-                balances[split.member_id] -= split.amount
+            if split.member_id in data:
+                data[split.member_id]['owed'] += split.amount
 
-    return balances
+    for v in data.values():
+        v['balance'] = v['paid'] - v['owed']
+
+    return data
 
 
 def calculate_settlements(balances, member_names):
@@ -44,7 +45,7 @@ def calculate_settlements(balances, member_names):
     CENT = Decimal('0.01')
 
     # Work with mutable copies, ignore already-settled members
-    b = {k: v for k, v in balances.items() if abs(v) >= CENT}
+    b = {k: v['balance'] for k, v in balances.items() if abs(v['balance']) >= CENT}
 
     settlements = []
 
