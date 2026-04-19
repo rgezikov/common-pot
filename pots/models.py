@@ -119,6 +119,17 @@ class Item(models.Model):
         return self.name
 
 
+class ListItemSuggestion(models.Model):
+    shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE, related_name='suggestions')
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        unique_together = ('shopping_list', 'name')
+
+    def __str__(self):
+        return self.name
+
+
 class Split(models.Model):
     drop = models.ForeignKey(Drop, on_delete=models.CASCADE, related_name='splits')
     member = models.ForeignKey(Member, on_delete=models.PROTECT, related_name='splits')
