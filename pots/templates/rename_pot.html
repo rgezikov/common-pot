@@ -31,6 +31,30 @@ function copyInviteLink() {
 }
 </script>
 
+<div class="mb-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Telegram Bot</h3>
+    {% if TELEGRAM_BOT_NAME %}
+        <p class="text-sm text-green-400 mb-1">Bot: @{{ TELEGRAM_BOT_NAME }}</p>
+        {% if chat_title %}
+            <p class="text-sm mb-3">Linked chat: <span class="font-medium">{{ chat_title }}</span></p>
+        {% elif pot.telegram_chat_id %}
+            <p class="text-sm text-yellow-400 mb-3">Chat linked (ID {{ pot.telegram_chat_id }}) but title unavailable.</p>
+        {% else %}
+            <p class="text-sm text-gray-500 mb-3">No group chat linked yet. Use <code>/pot {{ request.scheme }}://{{ request.get_host }}{% url 'join_pot' pot.invite_token %}</code> in a Telegram group.</p>
+        {% endif %}
+        {% if pot.telegram_chat_id %}
+        <form method="post" action="{% url 'ping_bot' pot.invite_token %}">
+            {% csrf_token %}
+            <button type="submit" class="text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg">
+                Send test message to chat
+            </button>
+        </form>
+        {% endif %}
+    {% else %}
+        <p class="text-sm text-gray-500">Not configured — notifications disabled.</p>
+    {% endif %}
+</div>
+
 <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Edit Details</h3>
 <form method="post" class="space-y-4">
     {% csrf_token %}

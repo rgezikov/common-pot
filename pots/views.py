@@ -2,13 +2,14 @@ import ast
 import datetime
 import operator
 from decimal import Decimal, InvalidOperation
+from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import csv
 import io
-from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim, ShoppingList, ListMember, Item
+from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim, ShoppingList, ListMember, Item, ListItemSuggestion
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
@@ -353,6 +354,27 @@ def pot_report(request, token):
     })
 
 
+def _get_chat_title(chat_id):
+    """Call Telegram getChat API and return the chat title, or None on failure."""
+    import httpx
+    from django.conf import settings
+    token = settings.TELEGRAM_BOT_TOKEN
+    if not token or not chat_id:
+        return None
+    try:
+        r = httpx.get(
+            f"https://api.telegram.org/bot{token}/getChat",
+            params={'chat_id': chat_id},
+            timeout=3,
+        )
+        data = r.json()
+        if data.get('ok'):
+            return data['result'].get('title') or data['result'].get('first_name')
+    except Exception:
+        pass
+    return None
+
+
 @login_required
 def rename_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
@@ -364,7 +386,12 @@ def rename_pot(request, token):
             pot.save()
             return redirect('pot_detail', token=token)
     placeholders = pot.members.filter(user__is_placeholder=True).select_related('user')
-    return render(request, 'rename_pot.html', {'pot': pot, 'placeholders': placeholders})
+    chat_title = _get_chat_title(pot.telegram_chat_id) if pot.telegram_chat_id else None
+    return render(request, 'rename_pot.html', {
+        'pot': pot,
+        'placeholders': placeholders,
+        'chat_title': chat_title,
+    })
 
 
 def _sync_member_username(member, user):
@@ -400,6 +427,33 @@ def join_pot(request, token):
     if not created:
         _sync_member_username(member, user)
     return redirect('pot_detail', token=pot.invite_token)
+
+
+@login_required
+def ping_bot(request, token):
+    pot = get_object_or_404(Pot, invite_token=token)
+    if request.method == 'POST' and pot.telegram_chat_id:
+        from django.conf import settings
+        import httpx
+        tg_token = settings.TELEGRAM_BOT_TOKEN
+        if tg_token:
+            pot_url = f"https://pot.respobit.eu/pot/{pot.invite_token}/"
+            try:
+                httpx.post(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    json={
+                        'chat_id': pot.telegram_chat_id,
+                        'text': f"👋 Test message from Common Pot web app — pot *{pot.name}* is connected.\n[Open pot]({pot_url})",
+                        'parse_mode': 'Markdown',
+                    },
+                    timeout=5,
+                )
+                messages.success(request, 'Test message sent to the linked chat.')
+            except Exception:
+                messages.error(request, 'Failed to send test message.')
+        else:
+            messages.error(request, 'Bot token not configured.')
+    return redirect('rename_pot', token=token)
 
 
 @login_required
@@ -506,10 +560,12 @@ def list_detail(request, token):
     if not list_member:
         return redirect('join_list', token=token)
     items = shopping_list.items.select_related('checked_by__user').order_by('checked', 'created_at')
+    suggestions = shopping_list.suggestions.values_list('name', flat=True)
     return render(request, 'list_detail.html', {
         'list': shopping_list,
         'items': items,
         'list_member': list_member,
+        'suggestions': suggestions,
     })
 
 
@@ -525,7 +581,11 @@ def add_item(request, token):
         name = name[:1].upper() + name[1:]
         note = request.POST.get('note', '').strip()
         if name:
-            Item.objects.create(shopping_list=shopping_list, name=name, note=note)
+            if shopping_list.items.filter(name__iexact=name, checked=False).exists():
+                messages.warning(request, f'"{name}" is already on the list.')
+            else:
+                Item.objects.create(shopping_list=shopping_list, name=name, note=note)
+                ListItemSuggestion.objects.get_or_create(shopping_list=shopping_list, name=name)
     return redirect('list_detail', token=token)
 
 
@@ -560,8 +620,10 @@ def edit_item(request, token, item_id):
             item.name = name
             item.note = note
             item.save(update_fields=['name', 'note'])
+            ListItemSuggestion.objects.get_or_create(shopping_list=shopping_list, name=name)
             return redirect('list_detail', token=token)
-    return render(request, 'edit_item.html', {'list': shopping_list, 'item': item})
+    suggestions = shopping_list.suggestions.values_list('name', flat=True)
+    return render(request, 'edit_item.html', {'list': shopping_list, 'item': item, 'suggestions': suggestions})
 
 
 @login_required

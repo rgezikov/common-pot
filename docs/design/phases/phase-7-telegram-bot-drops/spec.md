@@ -40,7 +40,8 @@ Weighted split after a comma:
 ## Commands
 
 - `/pot new` — create a new pot for this group chat (named after the chat)
-- `/pot <invite_token>` — link this group chat to an existing pot from the web UI
+- `/pot <invite_token>` — link this group chat to an existing pot from the web UI; one pot per chat — if the chat is already linked, `/pot unlink` first
+- `/pot unlink` — unlink the current pot from this group chat
 - `/link` — reply with the web invite link for the linked pot
 - `/drop <amount> <description> [@payer]` — log a drop; split equally among all pot members
 

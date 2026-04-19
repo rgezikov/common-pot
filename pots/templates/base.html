@@ -50,6 +50,13 @@
         </div>
     </header>
     <main class="px-4 py-6 max-w-lg mx-auto">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="mb-4 px-4 py-3 rounded-lg text-sm {% if message.tags == 'error' %}bg-red-900 text-red-200{% else %}bg-yellow-800 text-yellow-200{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
     <script>

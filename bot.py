@@ -50,7 +50,6 @@ def _link_pot_to_chat_sync(token_str: str, chat_id: int):
     Link an existing pot (by invite token or full invite URL) to this chat.
     Returns (pot, error_message). error_message is None on success.
     """
-    # Extract UUID from full URL if needed
     import re
     m = re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', token_str, re.I)
     if m:
@@ -65,9 +64,25 @@ def _link_pot_to_chat_sync(token_str: str, chat_id: int):
         return None, "No pot found with that invite token."
     if pot.telegram_chat_id and pot.telegram_chat_id != chat_id:
         return None, "This pot is already linked to a different group."
+    if pot.telegram_chat_id == chat_id:
+        return None, f"The chat is already linked to this pot."
+    existing = Pot.objects.filter(telegram_chat_id=chat_id).exclude(pk=pot.pk).first()
+    if existing:
+        return None, f"This chat is already linked to pot \"{existing.name}\". Use /pot unlink first."
     pot.telegram_chat_id = chat_id
     pot.save(update_fields=['telegram_chat_id'])
     return pot, None
+
+
+def _unlink_pot_from_chat_sync(chat_id: int):
+    """Unlink whichever pot is linked to this chat. Returns (pot_name, error)."""
+    pot = Pot.objects.filter(telegram_chat_id=chat_id).first()
+    if not pot:
+        return None, "This chat has no linked pot."
+    name = pot.name
+    pot.telegram_chat_id = None
+    pot.save(update_fields=['telegram_chat_id'])
+    return name, None
 
 
 def _get_or_create_member_sync(pot: Pot, tg_user) -> Member:
@@ -121,6 +136,7 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "*Common Pot commands*\n\n"
             "/pot new — create a new pot for this group\n"
             "/pot <invite\\_token> — link an existing pot\n"
+            "/pot unlink — unlink the current pot from this chat\n"
             "/link — get the web app link\n"
             "/drop <amount> [description] [/paid @user] [/split @user:weight, ...] — log an expense\n"
             "/balance — show member balances\n"
@@ -163,35 +179,46 @@ async def cmd_pot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     subcommand = args[0].lower()
 
-    if subcommand == 'new':
-        existing = await sync_to_async(_get_pot_for_chat_sync)(chat.id)
-        if existing:
-            invite_url = f"{SITE_URL}/join/{existing.invite_token}/"
+    try:
+        if subcommand == 'unlink':
+            pot_name, error = await sync_to_async(_unlink_pot_from_chat_sync)(chat.id)
+            if error:
+                await update.message.reply_text(f"❌ {error}")
+                return
+            await update.message.reply_text(f"✅ Pot \"{pot_name}\" unlinked from this chat.")
+            return
+        if subcommand == 'new':
+            existing = await sync_to_async(_get_pot_for_chat_sync)(chat.id)
+            if existing:
+                invite_url = f"{SITE_URL}/join/{existing.invite_token}/"
+                await update.message.reply_text(
+                    f"This group is already linked to pot *{existing.name}*.\n[Join the web app]({invite_url})",
+                    parse_mode='Markdown',
+                )
+                return
+            pot = await sync_to_async(_create_pot_for_chat_sync)(chat)
+            invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
             await update.message.reply_text(
-                f"This group is already linked to pot *{existing.name}*.\n[Join the web app]({invite_url})",
+                f"✅ Pot *{pot.name}* created!\n"
+                f"[Join the web app]({invite_url})\n\n"
+                f"Use /link to get the invite link, /drop to log expenses.",
                 parse_mode='Markdown',
             )
-            return
-        pot = await sync_to_async(_create_pot_for_chat_sync)(chat)
-        invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
-        await update.message.reply_text(
-            f"✅ Pot *{pot.name}* created!\n"
-            f"[Join the web app]({invite_url})\n\n"
-            f"Use /link to get the invite link, /drop to log expenses.",
-            parse_mode='Markdown',
-        )
-    else:
-        pot, error = await sync_to_async(_link_pot_to_chat_sync)(args[0], chat.id)
-        if error:
-            await update.message.reply_text(f"❌ {error}")
-            return
-        invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
-        await update.message.reply_text(
-            f"✅ Linked to pot *{pot.name}*!\n"
-            f"[Join the web app]({invite_url})\n\n"
-            f"Use /link to get the invite link, /drop to log expenses.",
-            parse_mode='Markdown',
-        )
+        else:
+            pot, error = await sync_to_async(_link_pot_to_chat_sync)(args[0], chat.id)
+            if error:
+                await update.message.reply_text(f"❌ {error}")
+                return
+            invite_url = f"{SITE_URL}/join/{pot.invite_token}/"
+            await update.message.reply_text(
+                f"✅ Linked to pot *{pot.name}*!\n"
+                f"[Join the web app]({invite_url})\n\n"
+                f"Use /link to get the invite link, /drop to log expenses.",
+                parse_mode='Markdown',
+            )
+    except Exception as e:
+        logger.exception("Error in /pot command")
+        await update.message.reply_text(f"❌ Unexpected error: {e}")
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
