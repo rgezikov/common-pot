@@ -23,11 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('COMPOT_SECRET_KEY', 'django-insecure-b7_$z3*qev1&ay+)j2lash2b5^!b%oc%ymrw8gk12sqbrj5q%r')
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('COMPOT_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('COMPOT_DEBUG', 'False') == 'True'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+_default_secret = 'django-insecure-b7_$z3*qev1&ay+)j2lash2b5^!b%oc%ymrw8gk12sqbrj5q%r' if DEBUG else ''
+SECRET_KEY = os.environ.get('COMPOT_SECRET_KEY', _default_secret)
 
 ALLOWED_HOSTS = ['pot.respobit.eu', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['https://pot.respobit.eu']

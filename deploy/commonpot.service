@@ -1,0 +1,15 @@
+[Unit]
+Description=Common Pot gunicorn
+After=network.target
+
+[Service]
+User=potdev
+WorkingDirectory=/home/potdev/app
+ExecStart=/home/potdev/app/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8000 \
+    --workers 2 \
+    commonpot.wsgi:application
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
