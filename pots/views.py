@@ -577,9 +577,15 @@ def add_item(request, token):
     if not list_member:
         return redirect('join_list', token=token)
     if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
+        raw = request.POST.get('name', '').strip()
+        if ',' in raw:
+            name, _, note = raw.partition(',')
+            name = name.strip()
+            note = note.strip()
+        else:
+            name = raw
+            note = ''
         name = name[:1].upper() + name[1:]
-        note = request.POST.get('note', '').strip()
         if name:
             if shopping_list.items.filter(name__iexact=name, checked=False).exists():
                 messages.warning(request, f'"{name}" is already on the list.')
