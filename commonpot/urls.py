@@ -34,5 +34,6 @@ urlpatterns = [
     path('list/<uuid:token>/item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
     path('list/<uuid:token>/import/', views.import_items, name='import_items'),
     path('help/', views.help_page, name='help'),
+    path('about/', views.about_page, name='about'),
     path('sw.js', views.service_worker, name='service_worker'),
 ]

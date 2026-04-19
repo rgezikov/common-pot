@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}About — Common Pot{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">About</h2>
+    <a href="{{ back_url }}" class="text-sm text-gray-400 hover:text-gray-200">↑ Back</a>
+</div>
+
+<div class="space-y-6 text-sm">
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Common Pot</h3>
+        <p class="text-gray-300">Common Pot is a shared expense and shopping list tracker for small groups — trips, dinners, flat-shares, and more.</p>
+    </section>
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Developed by</h3>
+        <p class="text-gray-300">Respobit Oy, 2026.</p>
+        <p class="text-gray-300 mt-1">Built with the help of <a href="https://claude.ai" class="text-gray-200 hover:underline">Claude</a> by Anthropic.</p>
+    </section>
+
+    <section>
+        <h3 class="font-semibold text-base mb-2">Contact</h3>
+        <p class="text-gray-300"><a href="mailto:contact@respobit.eu" class="text-gray-200 hover:underline">contact@respobit.eu</a></p>
+    </section>
+
+</div>
+{% endblock %}

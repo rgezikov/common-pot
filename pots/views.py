@@ -331,6 +331,11 @@ def help_page(request):
     return render(request, 'help.html', {'back_url': back_url})
 
 
+def about_page(request):
+    back_url = request.GET.get('back', '/')
+    return render(request, 'about.html', {'back_url': back_url})
+
+
 def pot_report(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     members = list(pot.members.all())

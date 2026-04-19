@@ -29,6 +29,7 @@ Define the full top level development path.
 | [12](phases/phase-12-placeholder-members/spec.md) | Placeholder Members | Add members by name before they have a Telegram account |
 | [13](phases/phase-13-bot-chat-linking/spec.md) | Bot Chat Linking Improvements | Easier management of Telegram chat–pot connections |
 | [14](phases/phase-14-mobile-font-size/spec.md) | Mobile Font Size | Increase base font size on mobile browsers for readability |
+| [15](phases/phase-15-about/spec.md) | About Page | Company, year, contact info accessible from the home menu |
 | [1000](phases/phase-1000-shopping-lists/spec.md) | Shared Shopping Lists | Collaborative checklists for groups, independent of expense tracking |
 | [1001](phases/phase-1001-list-suggestions/spec.md) | Shopping List: Item Suggestions | Item name suggestions and duplicate prevention |
 | [1002](phases/phase-1002-list-density/spec.md) | Shopping List: Compact Display | Tighter item rows so more fit on screen without scrolling |
