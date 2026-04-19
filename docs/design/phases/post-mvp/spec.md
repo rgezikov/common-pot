@@ -10,3 +10,4 @@
 - Shared purchase lists — collaborative shopping lists for groups, independent of pots
 - Send Telegram notifications asynchronously so the web request doesn't block on bot API calls
 - Site owner statistics — number of users, pots, drops, lists; activity over time
+- Per-user appearance settings: font size, compact/comfortable spacing, theme (light/dark persisted server-side), show/hide checked list items by default
