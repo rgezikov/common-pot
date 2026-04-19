@@ -8,6 +8,8 @@
             <div class="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10">
                 <a href="{% url 'create_pot' %}"
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">New Pot</a>
+                <a href="{% url 'create_list' %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">New List</a>
                 <a href="{% url 'help' %}?back=/"
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
             </div>
@@ -25,7 +27,8 @@
     })();
     </script>
     {% if pots %}
-        <ul class="space-y-3">
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Pots</h3>
+        <ul class="space-y-3 mb-6">
         {% for pot in pots %}
             <li>
                 <a href="{% url 'pot_detail' pot.invite_token %}" class="block bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
@@ -36,7 +39,20 @@
         {% endfor %}
         </ul>
     {% else %}
-        <p class="text-gray-300">No pots yet. Create one or join via an invite link.</p>
+        <p class="text-gray-300 mb-6">No pots yet. Create one or join via an invite link.</p>
+    {% endif %}
+    {% if lists %}
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Lists</h3>
+        <ul class="space-y-3">
+        {% for list in lists %}
+            <li>
+                <a href="{% url 'list_detail' list.invite_token %}" class="block bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
+                    <span class="font-medium">{{ list.name }}</span>
+                    <span class="text-gray-300 text-sm ml-2">{{ list.items.count }} items</span>
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
     {% endif %}
 {% else %}
     <div class="text-center mt-12">

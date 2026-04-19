@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}New List{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">New List</h2>
+    <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
+</div>
+
+<form method="post" class="space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block text-sm font-medium mb-1">Name</label>
+        <input type="text" name="name" required autofocus
+            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+        Create
+    </button>
+</form>
+{% endblock %}

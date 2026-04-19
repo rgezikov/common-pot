@@ -85,6 +85,40 @@ class Drop(models.Model):
         return f"{self.description} ({self.amount})"
 
 
+class ShoppingList(models.Model):
+    name = models.CharField(max_length=200)
+    invite_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_by = models.ForeignKey(CompotUser, on_delete=models.PROTECT, related_name='lists_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ListMember(models.Model):
+    shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(CompotUser, on_delete=models.PROTECT, related_name='list_memberships')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('shopping_list', 'user')
+
+    def __str__(self):
+        return f"{self.user.name} ({self.shopping_list.name})"
+
+
+class Item(models.Model):
+    shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE, related_name='items')
+    name = models.CharField(max_length=200)
+    note = models.CharField(max_length=200, blank=True)
+    checked = models.BooleanField(default=False)
+    checked_by = models.ForeignKey(ListMember, on_delete=models.SET_NULL, null=True, blank=True, related_name='checked_items')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Split(models.Model):
     drop = models.ForeignKey(Drop, on_delete=models.CASCADE, related_name='splits')
     member = models.ForeignKey(Member, on_delete=models.PROTECT, related_name='splits')

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Settings — {{ list.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">List Settings</h2>
+    <a href="{% url 'list_detail' list.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">↑ {{ list.name }}</a>
+</div>
+
+<div class="mb-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Invite Link</h3>
+    <div class="flex items-center gap-2">
+        <div id="invite-link" class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3 text-sm break-all">
+            {{ request.scheme }}://{{ request.get_host }}{% url 'join_list' list.invite_token %}
+        </div>
+        <button onclick="copyInviteLink()"
+            class="shrink-0 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-3 py-3 rounded-lg"
+            title="Copy to clipboard">
+            📋
+        </button>
+    </div>
+    <p id="copy-confirm" class="text-xs text-green-400 mt-1 hidden">Copied!</p>
+</div>
+<script>
+function copyInviteLink() {
+    var text = document.getElementById('invite-link').innerText.trim();
+    navigator.clipboard.writeText(text).then(function() {
+        var msg = document.getElementById('copy-confirm');
+        msg.classList.remove('hidden');
+        setTimeout(function() { msg.classList.add('hidden'); }, 2000);
+    });
+}
+</script>
+
+<h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Rename</h3>
+<form method="post" class="space-y-4 mb-8">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="rename">
+    <input type="text" name="name" required
+        value="{{ list.name }}"
+        class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+        Save
+    </button>
+</form>
+
+<div class="mb-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Import Items from CSV</h3>
+    <p class="text-xs text-gray-400 mb-3">First column: item name. Second column (optional): note. Items are appended to the list.</p>
+    <form method="post" action="{% url 'import_items' list.invite_token %}" enctype="multipart/form-data" class="flex gap-2">
+        {% csrf_token %}
+        <input type="file" name="file" accept=".csv,text/csv"
+            class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 text-sm">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+            Import
+        </button>
+    </form>
+</div>
+
+<div class="mt-8 border-t border-gray-700 pt-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Danger Zone</h3>
+    <form method="post" onsubmit="return confirm('Delete list \'{{ list.name|escapejs }}\'? This cannot be undone.')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <button type="submit"
+            class="w-full bg-red-700 hover:bg-red-600 text-white font-medium py-3 rounded-lg text-base">
+            Delete List
+        </button>
+    </form>
+</div>
+{% endblock %}

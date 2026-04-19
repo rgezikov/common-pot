@@ -6,7 +6,9 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim
+import csv
+import io
+from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim, ShoppingList, ListMember, Item
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
@@ -16,9 +18,11 @@ from .telegram_notify import notify_drop_added
 def home(request):
     user = get_telegram_user(request)
     pots = []
+    lists = []
     if user:
         pots = Pot.objects.filter(members__user__telegram_user_id=user['id'])
-    return render(request, 'home.html', {'user': user, 'pots': pots})
+        lists = ShoppingList.objects.filter(members__user__telegram_user_id=user['id'])
+    return render(request, 'home.html', {'user': user, 'pots': pots, 'lists': lists})
 
 
 def telegram_login(request):
@@ -459,3 +463,157 @@ def claim_placeholder(request, claim_token):
         return redirect('pot_detail', token=pot.invite_token)
 
     return render(request, 'claim_confirm.html', {'pot': pot, 'member': claim.member})
+
+
+# --- Shopping lists ---
+
+def _get_list_member(shopping_list, user):
+    """Return ListMember for the current user in this list, or None."""
+    return ListMember.objects.filter(shopping_list=shopping_list, user__telegram_user_id=user['id']).first()
+
+
+@login_required
+def create_list(request):
+    user = get_telegram_user(request)
+    compot_user = CompotUser.objects.filter(telegram_user_id=user['id']).first()
+    if not compot_user:
+        return redirect('home')
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            shopping_list = ShoppingList.objects.create(name=name, created_by=compot_user)
+            ListMember.objects.create(shopping_list=shopping_list, user=compot_user)
+            return redirect('list_detail', token=shopping_list.invite_token)
+    return render(request, 'create_list.html')
+
+
+@login_required
+def join_list(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    compot_user = CompotUser.objects.filter(telegram_user_id=user['id']).first()
+    if not compot_user:
+        return redirect('home')
+    ListMember.objects.get_or_create(shopping_list=shopping_list, user=compot_user)
+    return redirect('list_detail', token=token)
+
+
+@login_required
+def list_detail(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    items = shopping_list.items.select_related('checked_by__user').order_by('checked', 'created_at')
+    return render(request, 'list_detail.html', {
+        'list': shopping_list,
+        'items': items,
+        'list_member': list_member,
+    })
+
+
+@login_required
+def add_item(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        name = name[:1].upper() + name[1:]
+        note = request.POST.get('note', '').strip()
+        if name:
+            Item.objects.create(shopping_list=shopping_list, name=name, note=note)
+    return redirect('list_detail', token=token)
+
+
+@login_required
+def toggle_item(request, token, item_id):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    item = get_object_or_404(Item, id=item_id, shopping_list=shopping_list)
+    if request.method == 'POST':
+        item.checked = not item.checked
+        item.checked_by = list_member if item.checked else None
+        item.save(update_fields=['checked', 'checked_by'])
+    return redirect('list_detail', token=token)
+
+
+@login_required
+def edit_item(request, token, item_id):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    item = get_object_or_404(Item, id=item_id, shopping_list=shopping_list)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        name = name[:1].upper() + name[1:]
+        note = request.POST.get('note', '').strip()
+        if name:
+            item.name = name
+            item.note = note
+            item.save(update_fields=['name', 'note'])
+            return redirect('list_detail', token=token)
+    return render(request, 'edit_item.html', {'list': shopping_list, 'item': item})
+
+
+@login_required
+def delete_item(request, token, item_id):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    item = get_object_or_404(Item, id=item_id, shopping_list=shopping_list)
+    if request.method == 'POST':
+        item.delete()
+    return redirect('list_detail', token=token)
+
+
+@login_required
+def list_settings(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'rename':
+            name = request.POST.get('name', '').strip()
+            if name:
+                shopping_list.name = name
+                shopping_list.save(update_fields=['name'])
+                return redirect('list_detail', token=token)
+        elif action == 'delete':
+            shopping_list.delete()
+            return redirect('home')
+    return render(request, 'list_settings.html', {'list': shopping_list})
+
+
+@login_required
+def import_items(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    if request.method == 'POST' and request.FILES.get('file'):
+        f = request.FILES['file']
+        text = f.read().decode('utf-8', errors='replace')
+        reader = csv.reader(io.StringIO(text))
+        for row in reader:
+            if not row:
+                continue
+            name = row[0].strip()
+            note = row[1].strip() if len(row) > 1 else ''
+            if name:
+                Item.objects.create(shopping_list=shopping_list, name=name, note=note)
+    return redirect('list_detail', token=token)
