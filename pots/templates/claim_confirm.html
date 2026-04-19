@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Join {{ pot.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">Claim your slot</h2>
+</div>
+
+<p class="text-sm text-gray-300 mb-6">
+    You are about to claim the slot <span class="font-medium">{{ member.name }}</span> in pot <span class="font-medium">{{ pot.name }}</span>.
+    Your Telegram account will be linked to this slot and you'll get full access.
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+        Confirm
+    </button>
+</form>
+{% endblock %}

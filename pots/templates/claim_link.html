@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Claim Link — {{ member.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">Claim Link</h2>
+    <a href="{% url 'rename_pot' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Settings</a>
+</div>
+
+<p class="text-sm text-gray-300 mb-4">Send this link to <span class="font-medium">{{ member.name }}</span>. It expires in 1 hour.</p>
+
+<div class="flex items-center gap-2 mb-2">
+    <div id="claim-link" class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3 text-sm break-all">{{ claim_url }}</div>
+    <button onclick="copyClaimLink()"
+        class="shrink-0 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-3 py-3 rounded-lg"
+        title="Copy to clipboard">
+        📋
+    </button>
+</div>
+<p id="copy-confirm" class="text-xs text-green-400 mt-1 hidden">Copied!</p>
+
+<script>
+function copyClaimLink() {
+    var text = document.getElementById('claim-link').innerText.trim();
+    navigator.clipboard.writeText(text).then(function() {
+        var msg = document.getElementById('copy-confirm');
+        msg.classList.remove('hidden');
+        setTimeout(function() { msg.classList.add('hidden'); }, 2000);
+    });
+}
+</script>
+{% endblock %}

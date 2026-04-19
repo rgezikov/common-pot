@@ -53,6 +53,34 @@ function copyInviteLink() {
 </form>
 
 <div class="mt-8 border-t border-gray-700 pt-6">
+    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Placeholder Members</h3>
+    <p class="text-xs text-gray-400 mb-3">Add people by name before they join via Telegram. Generate a claim link to send them once they're ready.</p>
+    {% if placeholders %}
+    <ul class="space-y-2 mb-4">
+    {% for member in placeholders %}
+        <li class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+            <span>{{ member.name }}</span>
+            <form method="post" action="{% url 'generate_claim_link' pot.invite_token member.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg">
+                    Get claim link
+                </button>
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+    <form method="post" action="{% url 'add_placeholder' pot.invite_token %}" class="flex gap-2">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="Name" required
+            class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+            Add
+        </button>
+    </form>
+</div>
+
+<div class="mt-8 border-t border-gray-700 pt-6">
     <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Danger Zone</h3>
     <form method="post" action="{% url 'delete_pot' pot.invite_token %}"
           onsubmit="return confirm('Delete pot \'{{ pot.name|escapejs }}\'? This will permanently remove all drops and cannot be undone.')">

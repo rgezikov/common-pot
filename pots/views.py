@@ -5,7 +5,8 @@ from decimal import Decimal, InvalidOperation
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from .models import Pot, CompotUser, Member, Drop, Split
+from django.utils import timezone
+from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
@@ -358,7 +359,8 @@ def rename_pot(request, token):
             pot.description = request.POST.get('description', '').strip()
             pot.save()
             return redirect('pot_detail', token=token)
-    return render(request, 'rename_pot.html', {'pot': pot})
+    placeholders = pot.members.filter(user__is_placeholder=True).select_related('user')
+    return render(request, 'rename_pot.html', {'pot': pot, 'placeholders': placeholders})
 
 
 def _sync_member_username(member, user):
@@ -373,6 +375,7 @@ def _sync_member_username(member, user):
 def delete_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     if request.method == 'POST':
+        pot.drops.all().delete()  # cascades to splits; clears PROTECT references on members
         pot.delete()
         return redirect('home')
     return redirect('rename_pot', token=token)
@@ -393,3 +396,66 @@ def join_pot(request, token):
     if not created:
         _sync_member_username(member, user)
     return redirect('pot_detail', token=pot.invite_token)
+
+
+@login_required
+def add_placeholder(request, token):
+    pot = get_object_or_404(Pot, invite_token=token)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            compot_user = CompotUser.objects.create(name=name, is_placeholder=True)
+            Member.objects.create(pot=pot, user=compot_user)
+    return redirect('rename_pot', token=token)
+
+
+@login_required
+def generate_claim_link(request, token, member_id):
+    pot = get_object_or_404(Pot, invite_token=token)
+    member = get_object_or_404(Member, id=member_id, pot=pot, user__is_placeholder=True)
+    if request.method == 'POST':
+        PlaceholderClaim.objects.filter(member=member).delete()
+        claim = PlaceholderClaim.objects.create(
+            member=member,
+            expires_at=timezone.now() + datetime.timedelta(hours=1),
+        )
+        claim_url = request.build_absolute_uri(f'/claim/{claim.token}/')
+        return render(request, 'claim_link.html', {'pot': pot, 'member': member, 'claim_url': claim_url})
+    return redirect('rename_pot', token=token)
+
+
+@login_required
+def claim_placeholder(request, claim_token):
+    claim = get_object_or_404(PlaceholderClaim, token=claim_token)
+    if not claim.is_valid():
+        return render(request, 'claim_expired.html')
+
+    pot = claim.member.pot
+    user = get_telegram_user(request)
+
+    # Block if claimer already has a slot in this pot
+    if Member.objects.filter(pot=pot, user__telegram_user_id=user['id']).exists():
+        return render(request, 'claim_already_member.html', {'pot': pot})
+
+    if request.method == 'POST':
+        placeholder_user = claim.member.user
+        existing_user = CompotUser.objects.filter(telegram_user_id=user['id']).first()
+
+        if existing_user:
+            # Claimer already has a CompotUser — reassign the member slot to it
+            # and delete the now-orphaned placeholder CompotUser
+            claim.member.user = existing_user
+            claim.member.save(update_fields=['user'])
+            placeholder_user.delete()
+        else:
+            # First time claiming — fill in the placeholder CompotUser
+            placeholder_user.telegram_user_id = user['id']
+            placeholder_user.name = f"{user['first_name']} {user.get('last_name', '')}".strip()
+            placeholder_user.telegram_username = user.get('username', '').lower()
+            placeholder_user.is_placeholder = False
+            placeholder_user.save()
+
+        claim.delete()
+        return redirect('pot_detail', token=pot.invite_token)
+
+    return render(request, 'claim_confirm.html', {'pot': pot, 'member': claim.member})

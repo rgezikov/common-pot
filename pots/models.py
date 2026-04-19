@@ -18,9 +18,23 @@ class CompotUser(models.Model):
     telegram_user_id = models.BigIntegerField(null=True, blank=True, unique=True)
     name = models.CharField(max_length=100)
     telegram_username = models.CharField(max_length=100, blank=True)
+    is_placeholder = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
+
+
+class PlaceholderClaim(models.Model):
+    member = models.OneToOneField('Member', on_delete=models.CASCADE, related_name='claim')
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    expires_at = models.DateTimeField()
+
+    def is_valid(self):
+        from django.utils import timezone
+        return timezone.now() < self.expires_at
+
+    def __str__(self):
+        return f"Claim for {self.member}"
 
 
 class Member(models.Model):

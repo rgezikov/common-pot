@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Already a Member{% endblock %}
+{% block content %}
+<div class="mt-12 text-center space-y-4">
+    <h2 class="text-lg font-semibold">You're already in this pot</h2>
+    <p class="text-sm text-gray-400">Your Telegram account already has a slot in <span class="font-medium">{{ pot.name }}</span>.</p>
+    <a href="{% url 'pot_detail' pot.invite_token %}" class="block text-sm text-blue-400 hover:text-blue-300">Open pot →</a>
+</div>
+{% endblock %}
