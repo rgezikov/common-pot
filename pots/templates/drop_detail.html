@@ -17,8 +17,18 @@
     </div>
     <div class="flex justify-between">
         <span class="text-gray-400">Date</span>
-        <span>{{ drop.date }}</span>
+        <span>{{ drop.date|date:"N j" }}{% if drop.time|time:"H:i" != "00:00" %}, {{ drop.time|time:"H:i" }}{% endif %}</span>
     </div>
+    <div class="flex justify-between">
+        <span class="text-gray-400">Logged</span>
+        <span>{{ drop.created_at|date:"N j, H:i" }}</span>
+    </div>
+    {% if drop.was_edited %}
+    <div class="flex justify-between">
+        <span class="text-gray-400">Edited</span>
+        <span>{{ drop.updated_at|date:"N j, H:i" }}</span>
+    </div>
+    {% endif %}
 </div>
 
 <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Split</h3>

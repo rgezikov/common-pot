@@ -1,4 +1,5 @@
 import uuid
+import datetime
 from django.db import models
 
 
@@ -37,8 +38,14 @@ class Drop(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid_by = models.ForeignKey(Member, on_delete=models.PROTECT, related_name='drops_paid')
     date = models.DateField()
+    time = models.TimeField(default=datetime.time)
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default=SOURCE_WEB)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def was_edited(self):
+        return (self.updated_at - self.created_at) > datetime.timedelta(seconds=5)
 
     def __str__(self):
         return f"{self.description} ({self.amount})"

@@ -93,7 +93,7 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
                 <a href="{% url 'drop_detail' pot.invite_token drop.id %}" class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
                     <div>
                         <span class="font-medium text-sm">{{ drop.description }}</span>
-                        <span class="block text-xs text-gray-400">{{ drop.date }} · paid by {{ drop.paid_by.name }}</span>
+                        <span class="block text-xs text-gray-400">{{ drop.date|date:"N j" }}{% if drop.time|time:"H:i" != "00:00" %}, {{ drop.time|time:"H:i" }}{% endif %} · paid by {{ drop.paid_by.name }} · {% if drop.was_edited %}edited {{ drop.updated_at|date:"H:i" }}{% else %}logged {{ drop.created_at|date:"H:i" }}{% endif %}</span>
                     </div>
                     <span class="font-semibold text-sm">{{ drop.amount }}</span>
                 </a>

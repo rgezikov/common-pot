@@ -76,7 +76,7 @@ def pot_detail(request, token):
     members = list(pot.members.prefetch_related('drops_paid', 'splits').all())
     for m in members:
         m.can_remove = not m.drops_paid.exists() and not m.splits.exists()
-    drops = list(pot.drops.select_related('paid_by').prefetch_related('splits').order_by('-date', '-created_at'))
+    drops = list(pot.drops.select_related('paid_by').prefetch_related('splits').order_by('-date', '-time', '-created_at'))
     balances = calculate_balances(members, drops)
     member_names = {m.id: m.name for m in members}
     settlements = calculate_settlements(balances, member_names)
@@ -119,6 +119,7 @@ def add_drop(request, token):
                 amount=fields['amount'],
                 paid_by=paid_by,
                 date=fields['date'],
+                time=fields['time'],
             )
             for member_id, share in fields['splits'].items():
                 Split.objects.create(drop=drop, member_id=member_id, amount=share)
@@ -169,6 +170,7 @@ def _parse_drop_form(request, members):
     description = request.POST.get('description', '').strip()
     amount_str = request.POST.get('amount', '').strip()
     date_str = request.POST.get('date', '').strip()
+    time_str = request.POST.get('time', '').strip()
     paid_by_id = request.POST.get('paid_by', '').strip()
 
     errors = []
@@ -189,6 +191,11 @@ def _parse_drop_form(request, members):
     except ValueError:
         errors.append('Invalid date')
         date = None
+
+    try:
+        time = datetime.time.fromisoformat(time_str) if time_str else datetime.time(0, 0)
+    except ValueError:
+        time = datetime.time(0, 0)
 
     if not description:
         errors.append('Description is required')
@@ -218,6 +225,7 @@ def _parse_drop_form(request, members):
         'description': description,
         'amount': amount,
         'date': date,
+        'time': time,
         'paid_by_id': paid_by_id,
         'splits': splits,
     }, errors
@@ -248,6 +256,7 @@ def edit_drop(request, token, drop_id):
             drop.amount = fields['amount']
             drop.paid_by = paid_by
             drop.date = fields['date']
+            drop.time = fields['time']
             drop.save()
             drop.splits.all().delete()
             for member_id, share in fields['splits'].items():
