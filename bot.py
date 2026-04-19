@@ -18,7 +18,7 @@ from django.conf import settings
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-from pots.models import Pot, Member, Drop, Split
+from pots.models import Pot, CompotUser, Member, Drop, Split
 from pots.splits import calculate_splits
 from pots.balances import calculate_balances, calculate_settlements
 from pots.bot_parser import parse_drop_command, resolve_member_specs
@@ -72,17 +72,15 @@ def _link_pot_to_chat_sync(token_str: str, chat_id: int):
 
 def _get_or_create_member_sync(pot: Pot, tg_user) -> Member:
     name = f"{tg_user.first_name or ''} {tg_user.last_name or ''}".strip() or tg_user.username or str(tg_user.id)
-    member, created = Member.objects.get_or_create(
-        pot=pot,
+    username = (tg_user.username or '').lower()
+    compot_user, _ = CompotUser.objects.get_or_create(
         telegram_user_id=tg_user.id,
-        defaults={
-            'name': name,
-            'telegram_username': (tg_user.username or '').lower(),
-        },
+        defaults={'name': name, 'telegram_username': username},
     )
-    if not created and tg_user.username and member.telegram_username != tg_user.username.lower():
-        member.telegram_username = tg_user.username.lower()
-        member.save(update_fields=['telegram_username'])
+    if tg_user.username and compot_user.telegram_username != tg_user.username.lower():
+        compot_user.telegram_username = tg_user.username.lower()
+        compot_user.save(update_fields=['telegram_username'])
+    member, _ = Member.objects.get_or_create(pot=pot, user=compot_user)
     return member
 
 

@@ -14,18 +14,38 @@ class Pot(models.Model):
         return self.name
 
 
-class Member(models.Model):
-    pot = models.ForeignKey(Pot, on_delete=models.CASCADE, related_name='members')
-    telegram_user_id = models.BigIntegerField()
+class CompotUser(models.Model):
+    telegram_user_id = models.BigIntegerField(null=True, blank=True, unique=True)
     name = models.CharField(max_length=100)
     telegram_username = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Member(models.Model):
+    pot = models.ForeignKey(Pot, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(CompotUser, on_delete=models.PROTECT, related_name='memberships')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('pot', 'telegram_user_id')
+        unique_together = ('pot', 'user')
+
+    # Proxy properties so templates and most code need no changes
+    @property
+    def name(self):
+        return self.user.name
+
+    @property
+    def telegram_user_id(self):
+        return self.user.telegram_user_id
+
+    @property
+    def telegram_username(self):
+        return self.user.telegram_username
 
     def __str__(self):
-        return f"{self.name} ({self.pot.name})"
+        return f"{self.user.name} ({self.pot.name})"
 
 
 class Drop(models.Model):

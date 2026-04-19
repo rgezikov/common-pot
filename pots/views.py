@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from .models import Pot, Member, Drop, Split
+from .models import Pot, CompotUser, Member, Drop, Split
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
 from .balances import calculate_balances, calculate_settlements
@@ -16,7 +16,7 @@ def home(request):
     user = get_telegram_user(request)
     pots = []
     if user:
-        pots = Pot.objects.filter(members__telegram_user_id=user['id'])
+        pots = Pot.objects.filter(members__user__telegram_user_id=user['id'])
     return render(request, 'home.html', {'user': user, 'pots': pots})
 
 
@@ -61,12 +61,14 @@ def create_pot(request):
         if name:
             user = get_telegram_user(request)
             pot = Pot.objects.create(name=name, description=description)
-            Member.objects.create(
-                pot=pot,
+            compot_user, _ = CompotUser.objects.get_or_create(
                 telegram_user_id=user['id'],
-                name=f"{user['first_name']} {user.get('last_name', '')}".strip(),
-                telegram_username=user.get('username', ''),
+                defaults={
+                    'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
+                    'telegram_username': user.get('username', '').lower(),
+                },
             )
+            Member.objects.create(pot=pot, user=compot_user)
             return redirect('pot_detail', token=pot.invite_token)
     return render(request, 'create_pot.html')
 
@@ -362,9 +364,9 @@ def rename_pot(request, token):
 def _sync_member_username(member, user):
     """Update telegram_username if the user has set or changed it since joining."""
     username = user.get('username', '').lower()
-    if username and member.telegram_username != username:
-        member.telegram_username = username
-        member.save(update_fields=['telegram_username'])
+    if username and member.user.telegram_username != username:
+        member.user.telegram_username = username
+        member.user.save(update_fields=['telegram_username'])
 
 
 @login_required
@@ -380,14 +382,14 @@ def delete_pot(request, token):
 def join_pot(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     user = get_telegram_user(request)
-    member, created = Member.objects.get_or_create(
-        pot=pot,
+    compot_user, _ = CompotUser.objects.get_or_create(
         telegram_user_id=user['id'],
         defaults={
             'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
             'telegram_username': user.get('username', '').lower(),
         },
     )
+    member, created = Member.objects.get_or_create(pot=pot, user=compot_user)
     if not created:
         _sync_member_username(member, user)
     return redirect('pot_detail', token=pot.invite_token)

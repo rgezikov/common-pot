@@ -6,7 +6,7 @@ The Telegram bot is optional — the web app works standalone without it.
 
 ## Prerequisites
 
-- A VPS or server with Ubuntu 24.04 LTS
+- A VPS or server with Ubuntu 24.04 LTS and root access
 - A domain name with an A record pointing to the server's IP
 
 ## Step 1 — Server setup

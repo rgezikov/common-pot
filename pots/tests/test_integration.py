@@ -9,7 +9,7 @@ import uuid
 from decimal import Decimal
 import pytest
 from django.test import Client
-from pots.models import Pot, Member, Drop, Split
+from pots.models import Pot, CompotUser, Member, Drop, Split
 from pots.balances import calculate_balances, calculate_settlements
 from pots.splits import calculate_splits
 
@@ -28,8 +28,10 @@ def big_pot(db):
     members = [
         Member.objects.create(
             pot=pot,
-            telegram_user_id=1000 + i,
-            name=f'Member {i:02d}',
+            user=CompotUser.objects.create(
+                telegram_user_id=1000 + i,
+                name=f'Member {i:02d}',
+            ),
         )
         for i in range(NUM_MEMBERS)
     ]
