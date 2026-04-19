@@ -124,16 +124,18 @@ def resolve_member_specs(tokens: list, members) -> tuple:
 
     weights = {}
     for item in items:
-        if ':' not in item:
-            continue
-        name_part, _, weight_str = item.rpartition(':')
-        name_part = name_part.strip()
-        try:
-            weight = Decimal(weight_str.strip())
-            if weight < 0:
+        if ':' in item:
+            name_part, _, weight_str = item.rpartition(':')
+            name_part = name_part.strip()
+            try:
+                weight = Decimal(weight_str.strip())
+                if weight < 0:
+                    continue
+            except InvalidOperation:
                 continue
-        except InvalidOperation:
-            continue
+        else:
+            name_part = item.strip()
+            weight = Decimal('1')
         member = lookup(name_part)
         if member is not None:
             weights[member.id] = weight

@@ -120,6 +120,18 @@ def test_legacy_at_payer_at_end_of_description():
     assert payer is not None and payer.id == 1
 
 
+def test_split_single_member_no_weight():
+    members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
+    desc, weights, payer = resolve_member_specs(['settlement', '/split', '@alice'], members)
+    assert weights == {1: Decimal('1')}
+
+
+def test_split_multiple_members_no_weight():
+    members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
+    desc, weights, payer = resolve_member_specs(['dinner', '/split', '@alice,', '@bob'], members)
+    assert weights == {1: Decimal('1'), 2: Decimal('1')}
+
+
 def test_space_before_colon_in_split():
     # Telegram picker inserts @username followed by a space, user then types :weight
     # Result: "@RGezikovRus :5, @RGezikov :3" — space between username and colon

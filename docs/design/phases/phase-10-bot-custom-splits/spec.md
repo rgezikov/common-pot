@@ -5,11 +5,11 @@
 ## Command syntax
 
 ```
-/drop <amount> [description] [/paid @username] [/split @username:weight, @username:weight ...]
+/drop <amount> [description] [/paid @username] [/split @username[:weight], ...]
 ```
 
 - `/paid @username` — payer by Telegram username
-- `/split @username:weight, ...` — custom split; members not listed are excluded
+- `/split @username[:weight], ...` — custom split; members not listed are excluded; weight defaults to 1 if omitted
 - Members must have a Telegram username to be referenced
 - The Telegram name picker (which inserts `@username ` with a trailing space) is supported
 - `/paid` and `/split` are recognised even without a leading space (e.g. `42/paid`)
@@ -19,6 +19,7 @@
 ```
 /drop 120 dinner
 /drop 120 dinner /paid @alice
+/drop 5 settlement /split @alice
 /drop 43 payback /paid @roman /split @roman:5, @rgezikov:8
 ```
 
@@ -26,6 +27,7 @@
 
 - Add `/paid` and `/split` section parsing to bot_parser
 - Comma-separated split items support names with spaces and `@username :weight` format
+- Weight is optional — omitting it defaults to 1 (useful for single-recipient settlements)
 - Lookup by Telegram username only — no ambiguous name matching
 - Sync `telegram_username` on every web app join and drop submission
 - Fix split rounding: use ROUND_HALF_UP instead of ROUND_DOWN
