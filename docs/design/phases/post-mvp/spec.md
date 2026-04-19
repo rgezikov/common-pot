@@ -9,3 +9,4 @@
 - Bot command support for placeholder members (`/paid`, `/split` by display name)
 - Shared purchase lists — collaborative shopping lists for groups, independent of pots
 - Send Telegram notifications asynchronously so the web request doesn't block on bot API calls
+- Site owner statistics — number of users, pots, drops, lists; activity over time
