@@ -14,6 +14,10 @@
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
                 <a href="{% url 'about' %}?back=/"
                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">About</a>
+                {% if is_maintainer %}
+                <a href="{% url 'stats' %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Stats</a>
+                {% endif %}
             </div>
         </div>
     </div>

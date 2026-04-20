@@ -4,7 +4,7 @@
 
 ## Access control
 
-A Django group named **Maintainers** gates access to the stats page. Users are added to the group via the Django admin. Any user in the Maintainers group can view the stats — no superuser required.
+An `is_maintainer` boolean field on `CompotUser` gates access. Set it to `True` via the Django admin on the user's CompotUser record. Non-maintainers get a 403.
 
 ## Features
 

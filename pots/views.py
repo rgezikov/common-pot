@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import csv
 import io
+from django.db import models as db_models
 from .models import Pot, CompotUser, Member, Drop, Split, PlaceholderClaim, ShoppingList, ListMember, Item, ListItemSuggestion
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_auth, get_telegram_user, login_required
 from .splits import calculate_splits
@@ -20,10 +21,14 @@ def home(request):
     user = get_telegram_user(request)
     pots = []
     lists = []
+    is_maintainer = False
     if user:
         pots = Pot.objects.filter(members__user__telegram_user_id=user['id'])
         lists = ShoppingList.objects.filter(members__user__telegram_user_id=user['id'])
-    return render(request, 'home.html', {'user': user, 'pots': pots, 'lists': lists})
+        is_maintainer = CompotUser.objects.filter(
+            telegram_user_id=user['id'], is_maintainer=True
+        ).exists()
+    return render(request, 'home.html', {'user': user, 'pots': pots, 'lists': lists, 'is_maintainer': is_maintainer})
 
 
 def telegram_login(request):
@@ -334,6 +339,58 @@ def help_page(request):
 def about_page(request):
     back_url = request.GET.get('back', '/')
     return render(request, 'about.html', {'back_url': back_url})
+
+
+def stats(request):
+    telegram_user = get_telegram_user(request)
+    if not telegram_user:
+        return redirect('/')
+    try:
+        compot_user = CompotUser.objects.get(telegram_user_id=telegram_user['id'])
+    except CompotUser.DoesNotExist:
+        return HttpResponse(status=403)
+    if not compot_user.is_maintainer:
+        return HttpResponse(status=403)
+
+    today = timezone.now().date()
+    days = [today - datetime.timedelta(days=i) for i in range(29, -1, -1)]
+
+    drops_by_day = {
+        entry['day']: entry['count']
+        for entry in Drop.objects.filter(created_at__date__gte=days[0])
+        .extra(select={'day': 'date(created_at)'})
+        .values('day')
+        .annotate(count=db_models.Count('id'))
+    }
+    items_by_day = {
+        entry['day']: entry['count']
+        for entry in Item.objects.filter(created_at__date__gte=days[0])
+        .extra(select={'day': 'date(created_at)'})
+        .values('day')
+        .annotate(count=db_models.Count('id'))
+    }
+
+    activity = [
+        {
+            'date': d,
+            'drops': drops_by_day.get(str(d), 0),
+            'items': items_by_day.get(str(d), 0),
+        }
+        for d in days
+    ]
+
+    context = {
+        'counts': {
+            'users': CompotUser.objects.filter(is_placeholder=False).count(),
+            'pots': Pot.objects.count(),
+            'drops': Drop.objects.count(),
+            'lists': ShoppingList.objects.count(),
+            'items': Item.objects.count(),
+        },
+        'activity': activity,
+        'max_activity': max((r['drops'] + r['items'] for r in activity), default=1),
+    }
+    return render(request, 'stats.html', context)
 
 
 def pot_report(request, token):
