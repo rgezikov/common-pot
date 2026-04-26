@@ -2,7 +2,7 @@
 {% block title %}{{ list.name }}{% endblock %}
 {% block content %}
 <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold">{{ list.name }}</h2>
+    <h2 id="list-title" class="text-lg font-semibold">{{ list.name }}</h2>
     <div class="flex items-center gap-3">
         <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
         <a href="{% url 'list_settings' list.invite_token %}" class="text-gray-400 hover:text-gray-200 text-sm">⚙</a>
@@ -12,7 +12,7 @@
 <datalist id="item-suggestions">
     {% for s in suggestions %}<option value="{{ s }}">{% endfor %}
 </datalist>
-<form method="post" action="{% url 'add_item' list.invite_token %}" class="flex gap-2 mb-6">
+<form id="add-item-form" method="post" action="{% url 'add_item' list.invite_token %}" class="flex gap-2 mb-6">
     {% csrf_token %}
     <input type="text" name="name" placeholder="Item name (or name, note)" required list="item-suggestions"
         class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -21,10 +21,11 @@
     </button>
 </form>
 
+<div id="items-list">
 {% if items %}
-<ul class="space-y-1">
+<ul class="space-y-0">
 {% for item in items %}
-    <li class="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 shadow">
+    <li class="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg px-2 py-1.5 shadow">
         <form method="post" action="{% url 'toggle_item' list.invite_token item.id %}">
             {% csrf_token %}
             <button type="submit" class="text-xl leading-none {% if item.checked %}text-green-400{% else %}text-gray-500{% endif %}">
@@ -32,15 +33,15 @@
             </button>
         </form>
         <div class="flex-1 min-w-0">
-            <span class="text-sm {% if item.checked %}line-through text-gray-500{% endif %}">{{ item.name }}</span>
-            {% if item.note %}<span class="text-xs text-gray-400 ml-2">{{ item.note }}</span>{% endif %}
-            {% if item.checked and item.checked_by %}<span class="text-xs text-gray-500 ml-2">by {{ item.checked_by.user.name }}</span>{% endif %}
+            <span class="text-base {% if item.checked %}line-through text-gray-500{% endif %}">{{ item.name }}</span>
+            {% if item.note %}<span class="text-xs text-gray-400 ml-1">{{ item.note }}</span>{% endif %}
+            {% if item.checked and item.checked_by %}<span class="text-xs text-gray-500 ml-1">by {{ item.checked_by.user.name }}</span>{% endif %}
         </div>
-        <a href="{% url 'edit_item' list.invite_token item.id %}" class="text-xs text-gray-500 hover:text-gray-300">edit</a>
+        <a href="{% url 'edit_item' list.invite_token item.id %}" class="text-sm text-gray-500 hover:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">✏</a>
         <form method="post" action="{% url 'delete_item' list.invite_token item.id %}"
               onsubmit="return confirm('Delete {{ item.name|escapejs }}?')">
             {% csrf_token %}
-            <button type="submit" class="text-xs text-red-500 hover:text-red-400">del</button>
+            <button type="submit" class="text-sm text-red-500 hover:text-red-400 bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 px-2 py-1 rounded">✕</button>
         </form>
     </li>
 {% endfor %}
@@ -48,4 +49,38 @@
 {% else %}
 <p class="text-gray-400 text-sm">No items yet. Add one above.</p>
 {% endif %}
+</div>
+<script>
+history.replaceState(null, '', window.location.href);
+
+window.addEventListener('pageshow', async function(e) {
+    if (!e.persisted) return;
+    const response = await fetch(window.location.href);
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('items-list').innerHTML = html.getElementById('items-list').innerHTML;
+    document.getElementById('list-title').textContent = html.getElementById('list-title').textContent;
+    document.title = html.title;
+});
+
+async function submitAndRefresh(form) {
+    const response = await fetch(form.action, {method: 'POST', body: new FormData(form)});
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('items-list').innerHTML = html.getElementById('items-list').innerHTML;
+    document.getElementById('flash-messages').innerHTML = html.getElementById('flash-messages').innerHTML;
+}
+
+document.getElementById('add-item-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = this.querySelector('input[name="name"]');
+    await submitAndRefresh(this);
+    input.value = '';
+    input.focus();
+});
+
+document.getElementById('items-list').addEventListener('submit', async function(e) {
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    await submitAndRefresh(e.target.closest('form'));
+});
+</script>
 {% endblock %}

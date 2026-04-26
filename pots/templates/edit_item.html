@@ -28,4 +28,11 @@
         Save
     </button>
 </form>
+<script>
+document.querySelector('form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const response = await fetch(window.location.href, {method: 'POST', body: new FormData(this)});
+    if (response.ok) history.back();
+});
+</script>
 {% endblock %}

@@ -69,9 +69,24 @@
         </ul>
         <p class="text-xs text-gray-400 mt-2">Leave all blank or put equal numbers to split equally among everyone.</p>
     </div>
-    <button type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+    <button type="submit" id="drop-submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg text-base">
         Save Changes
     </button>
 </form>
+<script>
+document.querySelector('form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('drop-submit');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    const response = await fetch(window.location.href, {method: 'POST', body: new FormData(this)});
+    if (new URL(response.url).pathname !== window.location.pathname) {
+        history.back();
+    } else {
+        const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+        document.querySelector('main').innerHTML = html.querySelector('main').innerHTML;
+    }
+});
+</script>
 {% endblock %}

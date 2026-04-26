@@ -6,6 +6,7 @@
     <a href="{% url 'pot_detail' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">↑ {{ pot.name }}</a>
 </div>
 
+<div id="settings-content">
 <div class="mb-6">
     <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Invite Link</h3>
     <div class="flex items-center gap-2">
@@ -115,4 +116,41 @@ function copyInviteLink() {
         </button>
     </form>
 </div>
+</div>
+<script>
+async function refreshSettings() {
+    const response = await fetch(window.location.href);
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('settings-content').innerHTML = html.getElementById('settings-content').innerHTML;
+    document.getElementById('flash-messages').innerHTML = html.getElementById('flash-messages').innerHTML;
+    attachSettingsListeners();
+}
+
+function attachSettingsListeners() {
+    const editForm = document.querySelector('form[method="post"]:not([action])');
+    if (editForm) editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const response = await fetch(window.location.href, {method: 'POST', body: new FormData(this)});
+        if (response.ok) history.back();
+    });
+
+    const pingForm = document.querySelector('form[action*="/ping/"]');
+    if (pingForm) pingForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await fetch(this.action, {method: 'POST', body: new FormData(this)});
+        await refreshSettings();
+    });
+
+    const addForm = document.querySelector('form[action*="placeholder/add"]');
+    if (addForm) addForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const input = this.querySelector('input[name="name"]');
+        await fetch(this.action, {method: 'POST', body: new FormData(this)});
+        await refreshSettings();
+        document.querySelector('form[action*="placeholder/add"] input[name="name"]').value = '';
+    });
+}
+
+attachSettingsListeners();
+</script>
 {% endblock %}

@@ -25,4 +25,13 @@
         </a>
     </div>
 </form>
+<script>
+document.querySelector('form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const response = await fetch(window.location.href, {method: 'POST', body: new FormData(this)});
+    if (new URL(response.url).pathname !== window.location.pathname) {
+        history.back();
+    }
+});
+</script>
 {% endblock %}

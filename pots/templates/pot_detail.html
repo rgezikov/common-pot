@@ -7,7 +7,7 @@
 {% endblock %}
 {% block content %}
 <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold">{{ pot.name }}</h2>
+    <h2 id="pot-title" class="text-lg font-semibold">{{ pot.name }}</h2>
     <div class="flex items-center gap-3">
         <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
         <div class="relative" id="pot-menu">
@@ -34,6 +34,7 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
     document.querySelector('.pot-menu-dropdown').classList.toggle('hidden');
 });
 </script>
+<div id="pot-content">
 {% if pot.description %}
     <p class="text-gray-300 text-sm mb-4">{{ pot.description }}</p>
 {% endif %}
@@ -89,4 +90,16 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
         <p class="text-gray-400 text-sm">No drops yet.</p>
     {% endif %}
 </div>
+</div>
+<script>
+history.replaceState(null, '', window.location.href);
+window.addEventListener('pageshow', async function(e) {
+    if (!e.persisted) return;
+    const response = await fetch(window.location.href);
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('pot-content').innerHTML = html.getElementById('pot-content').innerHTML;
+    document.getElementById('pot-title').textContent = html.getElementById('pot-title').textContent;
+    document.title = html.title;
+});
+</script>
 {% endblock %}

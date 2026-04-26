@@ -6,6 +6,7 @@
     <a href="{% url 'pot_detail' pot.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">↑ {{ pot.name }}</a>
 </div>
 
+<div id="drop-content">
 <div class="bg-white dark:bg-gray-800 rounded-lg px-4 py-4 shadow mb-6 space-y-2 text-sm">
     <div class="flex justify-between">
         <span class="text-gray-400">Amount</span>
@@ -46,7 +47,7 @@
         class="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 rounded-lg text-sm">
         Edit
     </a>
-    <form method="post" action="{% url 'delete_drop' pot.invite_token drop.id %}" class="flex-1"
+    <form id="delete-drop-form" method="post" action="{% url 'delete_drop' pot.invite_token drop.id %}" class="flex-1"
         onsubmit="return confirm('Delete this drop?')">
         {% csrf_token %}
         <button type="submit"
@@ -55,4 +56,20 @@
         </button>
     </form>
 </div>
+</div>
+<script>
+history.replaceState(null, '', window.location.href);
+window.addEventListener('pageshow', async function(e) {
+    if (!e.persisted) return;
+    const response = await fetch(window.location.href);
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('drop-content').innerHTML = html.getElementById('drop-content').innerHTML;
+});
+document.getElementById('delete-drop-form').addEventListener('submit', async function(e) {
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    await fetch(this.action, {method: 'POST', body: new FormData(this)});
+    history.go(-1);
+});
+</script>
 {% endblock %}
