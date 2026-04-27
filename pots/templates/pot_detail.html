@@ -13,13 +13,13 @@
         <div class="relative" id="pot-menu">
             <button onclick="document.getElementById('pot-menu').classList.toggle('open')"
                 class="text-gray-400 hover:text-gray-200 px-2 py-1 text-lg leading-none">⋮</button>
-            <div class="pot-menu-dropdown hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10">
+            <div class="pot-menu-dropdown hidden absolute right-0 mt-1 w-36 bg-[var(--surface)] rounded-lg shadow-lg py-1 z-10">
                 <a href="{% url 'rename_pot' pot.invite_token %}"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Settings</a>
                 <a href="{% url 'pot_report' pot.invite_token %}"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Report</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Report</a>
                 <a href="{% url 'help' %}?back=/pot/{{ pot.invite_token }}/"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Help</a>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
                 <span class="w-20 text-right">Balance</span>
             </li>
         {% for row in balance_rows %}
-            <li class="flex items-center bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+            <li class="flex items-center bg-[var(--surface)] rounded-lg px-4 py-3 shadow text-sm">
                 <span class="flex-1">{{ row.name }}</span>
                 <span class="w-20 text-right text-gray-400">{{ row.paid }}</span>
                 <span class="w-20 text-right text-gray-400">{{ row.owed }}</span>
@@ -70,13 +70,13 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
         <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">
             Drops{% if drops_total %} <span class="font-semibold text-gray-200 normal-case">{{ drops_total }}</span>{% endif %}
         </h3>
-        <a href="{% url 'add_drop' pot.invite_token %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-lg">+ Add Drop</a>
+        <a href="{% url 'add_drop' pot.invite_token %}" class="bg-accent-600 hover:bg-accent-700 text-white text-sm font-medium px-3 py-1 rounded-lg">+ Add Drop</a>
     </div>
     {% if drops %}
         <ul class="space-y-2">
         {% for drop in drops %}
             <li>
-                <a href="{% url 'drop_detail' pot.invite_token drop.id %}" class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
+                <a href="{% url 'drop_detail' pot.invite_token drop.id %}" class="flex items-center justify-between bg-[var(--surface)] rounded-lg px-4 py-3 shadow hover:shadow-md transition">
                     <div>
                         <span class="font-medium text-sm">{{ drop.description }}</span>
                         <span class="block text-xs text-gray-400">{{ drop.date|date:"N j" }}{% if drop.time|time:"H:i" != "00:00" %}, {{ drop.time|time:"H:i" }}{% endif %} · paid by {{ drop.paid_by.name }} · {% if drop.was_edited %}edited {{ drop.updated_at|date:"H:i" }}{% else %}logged {{ drop.created_at|date:"H:i" }}{% endif %}</span>

@@ -10,7 +10,7 @@
 <div class="mb-6">
     <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Invite Link</h3>
     <div class="flex items-center gap-2">
-        <div id="invite-link" class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3 text-sm break-all">
+        <div id="invite-link" class="flex-1 bg-[var(--input)] rounded-lg px-4 py-3 text-sm break-all">
             {{ request.scheme }}://{{ request.get_host }}{% url 'join_pot' pot.invite_token %}
         </div>
         <button onclick="copyInviteLink()"
@@ -63,16 +63,16 @@ function copyInviteLink() {
         <label class="block text-sm font-medium mb-1">Name</label>
         <input type="text" name="name" required autofocus
             value="{{ pot.name }}"
-            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full bg-[var(--input)] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-accent-500">
     </div>
     <div>
         <label class="block text-sm font-medium mb-1">Description <span class="text-gray-400">(optional)</span></label>
         <input type="text" name="description"
             value="{{ pot.description }}"
-            class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full bg-[var(--input)] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-accent-500">
     </div>
     <button type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-base">
+        class="w-full bg-accent-600 hover:bg-accent-700 text-white font-medium py-3 rounded-lg text-base">
         Save
     </button>
 </form>
@@ -83,7 +83,7 @@ function copyInviteLink() {
     {% if placeholders %}
     <ul class="space-y-2 mb-4">
     {% for member in placeholders %}
-        <li class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+        <li class="flex items-center justify-between bg-[var(--surface)] rounded-lg px-4 py-3 shadow text-sm">
             <span>{{ member.name }}</span>
             <form method="post" action="{% url 'generate_claim_link' pot.invite_token member.id %}">
                 {% csrf_token %}
@@ -98,8 +98,8 @@ function copyInviteLink() {
     <form method="post" action="{% url 'add_placeholder' pot.invite_token %}" class="flex gap-2">
         {% csrf_token %}
         <input type="text" name="name" placeholder="Name" required
-            class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+            class="flex-1 bg-[var(--input)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500">
+        <button type="submit" class="bg-accent-600 hover:bg-accent-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
             Add
         </button>
     </form>

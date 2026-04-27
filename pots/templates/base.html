@@ -6,8 +6,10 @@
     <title>{% block title %}Common Pot{% endblock %}</title>
     {% block head %}{% endblock %}
     <script>
-    // Apply theme before page renders to avoid flash
+    // Apply color theme and dark mode before page renders to avoid flash
     (function() {
+        var t = localStorage.getItem('color-theme') || 'ocean';
+        document.documentElement.setAttribute('data-theme', t);
         var stored = localStorage.getItem('theme');
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (stored === 'dark' || (!stored && prefersDark)) {
@@ -18,8 +20,21 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <style>@media (max-width: 640px) { html { font-size: 18px; } }</style>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { accent: { 300: 'var(--a3)', 400: 'var(--a4)', 500: 'var(--a5)', 600: 'var(--a6)', 700: 'var(--a7)' } } } } }</script>
+    <style>
+    @media (max-width: 640px) { html { font-size: 18px; } }
+    /* Accent colors */
+    :root, [data-theme="ocean"] { --a3:#93c5fd; --a4:#60a5fa; --a5:#3b82f6; --a6:#2563eb; --a7:#1d4ed8; }
+    [data-theme="forest"]       { --a3:#6ee7b7; --a4:#34d399; --a5:#10b981; --a6:#059669; --a7:#047857; }
+    [data-theme="sunset"]       { --a3:#fcd34d; --a4:#fbbf24; --a5:#f59e0b; --a6:#d97706; --a7:#b45309; }
+    /* Surfaces: page bg, card, hover, input */
+    [data-theme="ocean"]              { --bg:#f9fafb; --surface:#ffffff; --hover:#f3f4f6; --input:#f3f4f6; }
+    [data-theme="forest"]             { --bg:#f0fdf4; --surface:#ffffff; --hover:#dcfce7; --input:#dcfce7; }
+    [data-theme="sunset"]             { --bg:#fffbeb; --surface:#ffffff; --hover:#fef3c7; --input:#fef3c7; }
+    html.dark[data-theme="ocean"]     { --bg:#111827; --surface:#1f2937; --hover:#374151; --input:#374151; }
+    html.dark[data-theme="forest"]    { --bg:#052e16; --surface:#14532d; --hover:#166534; --input:#166534; }
+    html.dark[data-theme="sunset"]    { --bg:#1c1000; --surface:#2d1800; --hover:#3d2200; --input:#3d2200; }
+    </style>
     {% if not request.session.telegram_user %}
     <script>
     (function() {
@@ -37,16 +52,17 @@
     </script>
     {% endif %}
 </head>
-<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
-    <header class="bg-white dark:bg-gray-800 shadow px-4 py-3 flex items-center justify-between">
-        <a href="/" class="text-xl font-bold">Common Pot</a>
+<body class="bg-[var(--bg)] text-gray-900 dark:text-gray-100 min-h-screen">
+    <header class="bg-[var(--a7)] shadow px-4 py-3 flex items-center justify-between">
+        <a href="/" class="text-xl font-bold text-white">Common Pot</a>
         <div class="flex items-center gap-4">
-            <button onclick="toggleTheme()" class="text-gray-400 hover:text-gray-200" title="Toggle light/dark mode">
+            <button onclick="cycleTheme()" id="theme-dot" class="w-4 h-4 rounded-full bg-accent-500 border-2 border-white/30 flex-shrink-0" title="Switch color theme"></button>
+            <button onclick="toggleTheme()" class="text-white/70 hover:text-white" title="Toggle light/dark mode">
                 <span class="dark:hidden">🌙</span>
                 <span class="hidden dark:inline">☀️</span>
             </button>
             {% if request.session.telegram_user %}
-            <a href="/logout/" class="text-sm text-gray-400 hover:text-gray-200">Logout</a>
+            <a href="/logout/" class="text-sm text-white/70 hover:text-white">Logout</a>
             {% endif %}
         </div>
     </header>
@@ -81,6 +97,17 @@
             html.classList.add('dark');
             localStorage.setItem('theme', 'dark');
         }
+    }
+    var _themes = ['ocean', 'forest', 'sunset'];
+    var _themeNames = {ocean: 'Ocean', forest: 'Forest', sunset: 'Sunset'};
+    function cycleTheme() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme') || 'ocean';
+        var next = _themes[(_themes.indexOf(current) + 1) % _themes.length];
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('color-theme', next);
+        var dot = document.getElementById('theme-dot');
+        if (dot) dot.title = _themeNames[next];
     }
     </script>
     <script>

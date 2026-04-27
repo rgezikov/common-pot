@@ -7,7 +7,7 @@
 </div>
 
 <div id="drop-content">
-<div class="bg-white dark:bg-gray-800 rounded-lg px-4 py-4 shadow mb-6 space-y-2 text-sm">
+<div class="bg-[var(--surface)] rounded-lg px-4 py-4 shadow mb-6 space-y-2 text-sm">
     <div class="flex justify-between">
         <span class="text-gray-400">Amount</span>
         <span class="font-semibold">{{ drop.amount }}</span>
@@ -35,7 +35,7 @@
 <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">Split</h3>
 <ul class="space-y-2 mb-6">
 {% for split in splits %}
-    <li class="flex justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow text-sm">
+    <li class="flex justify-between bg-[var(--surface)] rounded-lg px-4 py-3 shadow text-sm">
         <span>{{ split.member.name }}</span>
         <span class="font-medium">{{ split.amount }}</span>
     </li>

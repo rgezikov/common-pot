@@ -5,18 +5,18 @@
         <h2 class="text-lg font-semibold">Hello, {{ user.first_name }}</h2>
         <div class="relative" id="home-menu">
             <button class="text-gray-400 hover:text-gray-200 px-2 py-1 text-lg leading-none">⋮</button>
-            <div class="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10">
+            <div class="hidden absolute right-0 mt-1 w-36 bg-[var(--surface)] rounded-lg shadow-lg py-1 z-10">
                 <a href="{% url 'create_pot' %}"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">New Pot</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">New Pot</a>
                 <a href="{% url 'create_list' %}"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">New List</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">New List</a>
                 <a href="{% url 'help' %}?back=/"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Help</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Help</a>
                 <a href="{% url 'about' %}?back=/"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">About</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">About</a>
                 {% if is_maintainer %}
                 <a href="{% url 'stats' %}"
-                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Stats</a>
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Stats</a>
                 {% endif %}
             </div>
         </div>
@@ -38,7 +38,7 @@
         <ul class="space-y-3 mb-6">
         {% for pot in pots %}
             <li>
-                <a href="{% url 'pot_detail' pot.invite_token %}" class="block bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
+                <a href="{% url 'pot_detail' pot.invite_token %}" class="block bg-[var(--surface)] rounded-lg px-4 py-3 shadow hover:shadow-md transition">
                     <span class="font-medium">{{ pot.name }}</span>
                     <span class="text-gray-300 text-sm ml-2">{{ pot.members.count }} members</span>
                 </a>
@@ -53,7 +53,7 @@
         <ul class="space-y-3">
         {% for list in lists %}
             <li>
-                <a href="{% url 'list_detail' list.invite_token %}" class="block bg-white dark:bg-gray-800 rounded-lg px-4 py-3 shadow hover:shadow-md transition">
+                <a href="{% url 'list_detail' list.invite_token %}" class="block bg-[var(--surface)] rounded-lg px-4 py-3 shadow hover:shadow-md transition">
                     <span class="font-medium">{{ list.name }}</span>
                     <span class="text-gray-300 text-sm ml-2">{{ list.items.count }} items</span>
                 </a>
@@ -75,7 +75,7 @@
         <h2 class="text-2xl font-bold mb-2">Common Pot</h2>
         <p class="text-gray-300 mb-8">Track shared expenses with your group.</p>
         <button onclick="telegramLogin()"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg text-base">
+            class="bg-accent-500 hover:bg-accent-600 text-white font-semibold px-6 py-3 rounded-lg text-base">
             Login with Telegram
         </button>
         <script>
