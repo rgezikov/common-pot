@@ -707,6 +707,17 @@ def delete_item(request, token, item_id):
     return redirect('list_detail', token=token)
 
 
+def delete_checked_items(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    if request.method == 'POST':
+        shopping_list.items.filter(checked=True).delete()
+    return redirect('list_detail', token=token)
+
+
 @login_required
 def list_settings(request, token):
     shopping_list = get_object_or_404(ShoppingList, invite_token=token)

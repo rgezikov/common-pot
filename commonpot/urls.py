@@ -32,6 +32,7 @@ urlpatterns = [
     path('list/<uuid:token>/item/<int:item_id>/toggle/', views.toggle_item, name='toggle_item'),
     path('list/<uuid:token>/item/<int:item_id>/edit/', views.edit_item, name='edit_item'),
     path('list/<uuid:token>/item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
+    path('list/<uuid:token>/items/delete-checked/', views.delete_checked_items, name='delete_checked_items'),
     path('list/<uuid:token>/import/', views.import_items, name='import_items'),
     path('help/', views.help_page, name='help'),
     path('about/', views.about_page, name='about'),

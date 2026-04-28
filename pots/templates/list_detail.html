@@ -5,7 +5,15 @@
     <h2 id="list-title" class="text-lg font-semibold">{{ list.name }}</h2>
     <div class="flex items-center gap-3">
         <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-200">↑ Home</a>
-        <a href="{% url 'list_settings' list.invite_token %}" class="text-gray-400 hover:text-gray-200 text-sm">⚙</a>
+        <div class="relative" id="list-menu">
+            <button class="text-gray-400 hover:text-gray-200 px-2 py-1 text-lg leading-none">☰</button>
+            <div class="hidden absolute right-0 mt-1 w-40 bg-[var(--surface)] rounded-lg shadow-lg py-1 z-10">
+                <a href="{% url 'list_settings' list.invite_token %}"
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Settings</a>
+                <button id="delete-checked-btn"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--hover)] text-red-400">Delete selected</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -51,6 +59,28 @@
 {% endif %}
 </div>
 <script>
+(function() {
+    var menu = document.getElementById('list-menu');
+    var dropdown = menu.querySelector('div');
+    menu.querySelector('button').addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+    });
+    document.addEventListener('click', function() { dropdown.classList.add('hidden'); });
+})();
+
+document.getElementById('delete-checked-btn').addEventListener('click', async function() {
+    if (!confirm('Delete all checked items?')) return;
+    document.getElementById('list-menu').querySelector('div').classList.add('hidden');
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', csrf);
+    const response = await fetch('{% url "delete_checked_items" list.invite_token %}', {method: 'POST', body: fd});
+    const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('items-list').innerHTML = html.getElementById('items-list').innerHTML;
+    document.getElementById('flash-messages').innerHTML = html.getElementById('flash-messages').innerHTML;
+});
+
 history.replaceState(null, '', window.location.href);
 
 window.addEventListener('pageshow', async function(e) {
