@@ -44,12 +44,15 @@ def telegram_login(request):
         'username': data.get('username', ''),
     }
     request.session['telegram_user'] = telegram_user
-    CompotUser.objects.get_or_create(
+    compot_user, _ = CompotUser.objects.get_or_create(
         telegram_user_id=telegram_user['id'],
         defaults={
             'name': f"{telegram_user['first_name']} {telegram_user.get('last_name', '')}".strip(),
             'telegram_username': telegram_user.get('username', '').lower(),
         },
+    )
+    CompotUser.objects.filter(pk=compot_user.pk).update(
+        telegram_username=telegram_user.get('username', '').lower()
     )
     next_url = request.session.pop('next', None)
     return redirect(next_url or 'home')
@@ -70,12 +73,15 @@ def webapp_auth(request):
     if not user:
         return JsonResponse({'ok': False}, status=403)
     request.session['telegram_user'] = user
-    CompotUser.objects.get_or_create(
+    compot_user, _ = CompotUser.objects.get_or_create(
         telegram_user_id=user['id'],
         defaults={
             'name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
             'telegram_username': user.get('username', '').lower(),
         },
+    )
+    CompotUser.objects.filter(pk=compot_user.pk).update(
+        telegram_username=user.get('username', '').lower()
     )
     next_url = request.session.pop('next', None)
     return JsonResponse({'ok': True, 'next': next_url})
