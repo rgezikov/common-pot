@@ -2,6 +2,8 @@ import ast
 import datetime
 import operator
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -35,12 +37,20 @@ def telegram_login(request):
     data = request.GET.dict()
     if not verify_telegram_auth(data):
         return render(request, 'auth_failed.html', status=403)
-    request.session['telegram_user'] = {
+    telegram_user = {
         'id': int(data['id']),
         'first_name': data.get('first_name', ''),
         'last_name': data.get('last_name', ''),
         'username': data.get('username', ''),
     }
+    request.session['telegram_user'] = telegram_user
+    CompotUser.objects.get_or_create(
+        telegram_user_id=telegram_user['id'],
+        defaults={
+            'name': f"{telegram_user['first_name']} {telegram_user.get('last_name', '')}".strip(),
+            'telegram_username': telegram_user.get('username', '').lower(),
+        },
+    )
     next_url = request.session.pop('next', None)
     return redirect(next_url or 'home')
 
@@ -60,6 +70,13 @@ def webapp_auth(request):
     if not user:
         return JsonResponse({'ok': False}, status=403)
     request.session['telegram_user'] = user
+    CompotUser.objects.get_or_create(
+        telegram_user_id=user['id'],
+        defaults={
+            'name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+            'telegram_username': user.get('username', '').lower(),
+        },
+    )
     next_url = request.session.pop('next', None)
     return JsonResponse({'ok': True, 'next': next_url})
 
@@ -338,7 +355,11 @@ def help_page(request):
 
 def about_page(request):
     back_url = request.GET.get('back', '/')
-    return render(request, 'about.html', {'back_url': back_url})
+    try:
+        version = (Path(settings.BASE_DIR) / 'VERSION').read_text().strip()
+    except Exception:
+        version = 'unknown'
+    return render(request, 'about.html', {'back_url': back_url, 'version': version})
 
 
 def stats(request):
