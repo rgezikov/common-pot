@@ -591,9 +591,13 @@ def _get_list_member(shopping_list, user):
 @login_required
 def create_list(request):
     user = get_telegram_user(request)
-    compot_user = CompotUser.objects.filter(telegram_user_id=user['id']).first()
-    if not compot_user:
-        return redirect('home')
+    compot_user, _ = CompotUser.objects.get_or_create(
+        telegram_user_id=user['id'],
+        defaults={
+            'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
+            'telegram_username': user.get('username', '').lower(),
+        },
+    )
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         if name:
@@ -607,9 +611,13 @@ def create_list(request):
 def join_list(request, token):
     shopping_list = get_object_or_404(ShoppingList, invite_token=token)
     user = get_telegram_user(request)
-    compot_user = CompotUser.objects.filter(telegram_user_id=user['id']).first()
-    if not compot_user:
-        return redirect('home')
+    compot_user, _ = CompotUser.objects.get_or_create(
+        telegram_user_id=user['id'],
+        defaults={
+            'name': f"{user['first_name']} {user.get('last_name', '')}".strip(),
+            'telegram_username': user.get('username', '').lower(),
+        },
+    )
     ListMember.objects.get_or_create(shopping_list=shopping_list, user=compot_user)
     return redirect('list_detail', token=token)
 
