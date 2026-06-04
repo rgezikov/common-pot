@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Suggestions — {{ list.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Suggestions</h2>
+    <a href="{% url 'list_detail' list.invite_token %}" class="text-sm text-gray-400 hover:text-gray-200">↑ {{ list.name }}</a>
+</div>
+
+<p class="text-xs text-gray-400 mb-4">Names suggested while adding items. Editing or deleting a suggestion does not change items already on the list.</p>
+
+{% if suggestions %}
+<ul class="space-y-0">
+{% for s in suggestions %}
+    <li class="flex items-center gap-1 bg-[var(--surface)] rounded-lg px-2 py-1.5 shadow" id="suggestion-{{ s.id }}">
+        <span class="suggestion-display flex-1 min-w-0 text-base truncate">{{ s.name }}</span>
+        <form method="post" action="{% url 'edit_suggestion' list.invite_token s.id %}"
+              class="suggestion-edit hidden flex-1 flex gap-1">
+            {% csrf_token %}
+            <input type="text" name="name" value="{{ s.name }}" required
+                class="flex-1 min-w-0 bg-[var(--input)] rounded-lg px-2 py-1 text-base focus:outline-none focus:ring-2 focus:ring-accent-500">
+            <button type="submit" class="text-sm text-green-500 hover:text-green-400 bg-[var(--input)] hover:bg-[var(--hover)] px-2 py-1 rounded">✓</button>
+        </form>
+        <button type="button" onclick="toggleEdit({{ s.id }})"
+            class="suggestion-edit-btn text-sm text-gray-500 hover:text-gray-300 bg-[var(--input)] hover:bg-[var(--hover)] px-2 py-1 rounded">✏</button>
+        <form method="post" action="{% url 'delete_suggestion' list.invite_token s.id %}"
+              onsubmit="return confirm('Delete suggestion {{ s.name|escapejs }}?')">
+            {% csrf_token %}
+            <button type="submit" class="text-sm text-red-500 hover:text-red-400 bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 px-2 py-1 rounded">✕</button>
+        </form>
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="text-gray-400 text-sm">No suggestions yet.</p>
+{% endif %}
+
+<script>
+function toggleEdit(id) {
+    var row = document.getElementById('suggestion-' + id);
+    row.querySelector('.suggestion-display').classList.toggle('hidden');
+    var form = row.querySelector('.suggestion-edit');
+    form.classList.toggle('hidden');
+    row.querySelector('.suggestion-edit-btn').classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+        form.querySelector('input').focus();
+    }
+}
+</script>
+{% endblock %}

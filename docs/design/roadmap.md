@@ -35,4 +35,5 @@ Define the full top level development path.
 | [1001](phases/phase-1001-list-suggestions/spec.md) | Shopping List: Item Suggestions | Item name suggestions and duplicate prevention |
 | [1002](phases/phase-1002-list-density/spec.md) | Shopping List: Compact Display | Tighter item rows so more fit on screen without scrolling |
 | [1003](phases/phase-1003-list-add-form/spec.md) | Shopping List: Simplified Add Form | Single input field for adding items on mobile |
+| [1003.1](phases/phase-1003.1-suggestions-management/spec.md) | Shopping List: Manage Suggestions | Edit and delete items in the suggestion list |
 | [post-MVP](phases/post-mvp/spec.md) | Post-MVP | PWA, export, multi-currency, accounts |

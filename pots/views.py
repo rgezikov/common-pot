@@ -793,3 +793,47 @@ def import_items(request, token):
             if name:
                 Item.objects.create(shopping_list=shopping_list, name=name, note=note)
     return redirect('list_detail', token=token)
+
+
+@login_required
+def manage_suggestions(request, token):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    suggestions = shopping_list.suggestions.order_by('name')
+    return render(request, 'manage_suggestions.html', {
+        'list': shopping_list,
+        'suggestions': suggestions,
+    })
+
+
+@login_required
+def edit_suggestion(request, token, suggestion_id):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    suggestion = get_object_or_404(ListItemSuggestion, id=suggestion_id, shopping_list=shopping_list)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        name = name[:1].upper() + name[1:]
+        if name and not shopping_list.suggestions.filter(name__iexact=name).exclude(pk=suggestion.pk).exists():
+            suggestion.name = name
+            suggestion.save(update_fields=['name'])
+    return redirect('manage_suggestions', token=token)
+
+
+@login_required
+def delete_suggestion(request, token, suggestion_id):
+    shopping_list = get_object_or_404(ShoppingList, invite_token=token)
+    user = get_telegram_user(request)
+    list_member = _get_list_member(shopping_list, user)
+    if not list_member:
+        return redirect('join_list', token=token)
+    suggestion = get_object_or_404(ListItemSuggestion, id=suggestion_id, shopping_list=shopping_list)
+    if request.method == 'POST':
+        suggestion.delete()
+    return redirect('manage_suggestions', token=token)

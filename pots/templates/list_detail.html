@@ -10,6 +10,8 @@
             <div class="hidden absolute right-0 mt-1 w-40 bg-[var(--surface)] rounded-lg shadow-lg py-1 z-10">
                 <a href="{% url 'list_settings' list.invite_token %}"
                     class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Settings</a>
+                <a href="{% url 'manage_suggestions' list.invite_token %}"
+                    class="block px-4 py-2 text-sm hover:bg-[var(--hover)]">Manage suggestions</a>
                 <button id="delete-checked-btn"
                     class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--hover)] text-red-400">Delete selected</button>
             </div>
