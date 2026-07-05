@@ -557,6 +557,18 @@ def add_placeholder(request, token):
 
 
 @login_required
+def rename_placeholder(request, token, member_id):
+    pot = get_object_or_404(Pot, invite_token=token)
+    member = get_object_or_404(Member, id=member_id, pot=pot, user__is_placeholder=True)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            member.user.name = name
+            member.user.save(update_fields=['name'])
+    return redirect('rename_pot', token=token)
+
+
+@login_required
 def generate_claim_link(request, token, member_id):
     pot = get_object_or_404(Pot, invite_token=token)
     member = get_object_or_404(Member, id=member_id, pot=pot, user__is_placeholder=True)

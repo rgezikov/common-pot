@@ -27,6 +27,7 @@ Define the full top level development path.
 | [10](phases/phase-10-bot-custom-splits/spec.md) | Telegram Bot: Custom Split Weights | Per-member split weights in the /drop command |
 | [11](phases/phase-11-delete-pot/spec.md) | Delete Pot | Allow pot owners to permanently delete a pot |
 | [12](phases/phase-12-placeholder-members/spec.md) | Placeholder Members | Add members by name before they have a Telegram account |
+| [12.1](phases/phase-12.1-edit-placeholder-name/spec.md) | Edit Placeholder Name | Rename a placeholder member after adding them |
 | [13](phases/phase-13-bot-chat-linking/spec.md) | Bot Chat Linking Improvements | Easier management of Telegram chat–pot connections |
 | [14](phases/phase-14-mobile-font-size/spec.md) | Mobile Font Size | Increase base font size on mobile browsers for readability |
 | [15](phases/phase-15-about/spec.md) | About Page | Company, year, contact info accessible from the home menu |

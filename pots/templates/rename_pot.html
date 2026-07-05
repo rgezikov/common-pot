@@ -83,9 +83,18 @@ function copyInviteLink() {
     {% if placeholders %}
     <ul class="space-y-2 mb-4">
     {% for member in placeholders %}
-        <li class="flex items-center justify-between bg-[var(--surface)] rounded-lg px-4 py-3 shadow text-sm">
-            <span>{{ member.name }}</span>
-            <form method="post" action="{% url 'generate_claim_link' pot.invite_token member.id %}">
+        <li class="flex items-center gap-2 bg-[var(--surface)] rounded-lg px-4 py-3 shadow text-sm" id="placeholder-{{ member.id }}">
+            <span class="placeholder-name flex-1 min-w-0 truncate">{{ member.name }}</span>
+            <form method="post" action="{% url 'rename_placeholder' pot.invite_token member.id %}"
+                  class="placeholder-rename hidden flex-1 flex gap-1">
+                {% csrf_token %}
+                <input type="text" name="name" value="{{ member.name }}" required
+                    class="flex-1 min-w-0 bg-[var(--input)] rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500">
+                <button type="submit" class="shrink-0 text-xs text-green-500 hover:text-green-400 bg-[var(--input)] hover:bg-[var(--hover)] px-2 py-1 rounded">✓</button>
+            </form>
+            <button type="button" onclick="togglePlaceholderEdit({{ member.id }})"
+                class="placeholder-edit-btn shrink-0 text-xs text-gray-500 hover:text-gray-300 bg-[var(--input)] hover:bg-[var(--hover)] px-2 py-1 rounded">✏</button>
+            <form method="post" action="{% url 'generate_claim_link' pot.invite_token member.id %}" class="shrink-0">
                 {% csrf_token %}
                 <button type="submit" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg">
                     Get claim link
@@ -149,6 +158,23 @@ function attachSettingsListeners() {
         await refreshSettings();
         document.querySelector('form[action*="placeholder/add"] input[name="name"]').value = '';
     });
+
+    document.querySelectorAll('form[action*="/rename/"]').forEach(function(form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await fetch(this.action, {method: 'POST', body: new FormData(this)});
+            await refreshSettings();
+        });
+    });
+}
+
+function togglePlaceholderEdit(id) {
+    const row = document.getElementById('placeholder-' + id);
+    row.querySelector('.placeholder-name').classList.toggle('hidden');
+    const form = row.querySelector('.placeholder-rename');
+    form.classList.toggle('hidden');
+    row.querySelector('.placeholder-edit-btn').classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) form.querySelector('input').focus();
 }
 
 attachSettingsListeners();
