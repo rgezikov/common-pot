@@ -67,7 +67,7 @@
         {% for member, weight in member_weights %}
             <li class="flex items-center gap-3">
                 <span class="flex-1 text-sm">{{ member.name }}</span>
-                <input type="number" name="weight_{{ member.id }}" min="0" step="any"
+                <input type="text" inputmode="decimal" name="weight_{{ member.id }}"
                     value="{{ weight }}" class="weight-input
                     w-24 bg-[var(--input)] rounded-lg px-3 py-2 text-base text-right focus:outline-none focus:ring-2 focus:ring-accent-500">
             </li>

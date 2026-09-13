@@ -204,7 +204,7 @@ def test_add_drop_form_weight_defaults_are_real_values(auth_client):
     content = response.content.decode()
     assert 'placeholder=' not in content
     for member in members:
-        assert f'name="weight_{member.id}" min="0" step="any"\n                    value=""' in content
+        assert f'name="weight_{member.id}"\n                    value=""' in content
 
 
 def test_add_drop_post_zeroing_others_directs_full_amount_to_one_member(auth_client):
