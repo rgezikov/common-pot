@@ -85,7 +85,7 @@ document.getElementById('weights-all-equal').addEventListener('click', function(
     document.querySelectorAll('.weight-input').forEach(el => el.value = '1');
 });
 document.getElementById('weights-all-zero').addEventListener('click', function() {
-    document.querySelectorAll('.weight-input').forEach(el => el.value = '0');
+    document.querySelectorAll('.weight-input').forEach(el => el.value = '');
 });
 document.querySelector('form').addEventListener('submit', async function(e) {
     e.preventDefault();
