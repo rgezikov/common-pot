@@ -44,12 +44,20 @@ function copyInviteLink() {
             <p class="text-sm text-gray-500 mb-3">No group chat linked yet. Use <code>/pot {{ request.scheme }}://{{ request.get_host }}{% url 'join_pot' pot.invite_token %}</code> in a Telegram group.</p>
         {% endif %}
         {% if pot.telegram_chat_id %}
-        <form method="post" action="{% url 'ping_bot' pot.invite_token %}">
-            {% csrf_token %}
-            <button type="submit" class="text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg">
-                Send test message to chat
-            </button>
-        </form>
+        <div class="flex flex-wrap gap-2">
+            <form method="post" action="{% url 'ping_bot' pot.invite_token %}">
+                {% csrf_token %}
+                <button type="submit" class="text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg">
+                    Send test message to chat
+                </button>
+            </form>
+            <form method="post" action="{% url 'unlink_chat' pot.invite_token %}">
+                {% csrf_token %}
+                <button type="submit" class="text-sm bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                    Unlink chat
+                </button>
+            </form>
+        </div>
         {% endif %}
     {% else %}
         <p class="text-sm text-gray-500">Not configured — notifications disabled.</p>
@@ -145,6 +153,14 @@ function attachSettingsListeners() {
 
     const pingForm = document.querySelector('form[action*="/ping/"]');
     if (pingForm) pingForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await fetch(this.action, {method: 'POST', body: new FormData(this)});
+        await refreshSettings();
+    });
+
+    const unlinkForm = document.querySelector('form[action*="/unlink-chat/"]');
+    if (unlinkForm) unlinkForm.addEventListener('submit', async function(e) {
+        if (!confirm('Unlink the Telegram chat from this pot? Bot commands will stop working in that chat until a pot is linked again.')) return;
         e.preventDefault();
         await fetch(this.action, {method: 'POST', body: new FormData(this)});
         await refreshSettings();

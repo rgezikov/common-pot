@@ -22,12 +22,12 @@
     </div>
     <div class="flex justify-between">
         <span class="text-gray-400">Logged</span>
-        <span>{{ drop.created_at|date:"N j, H:i" }}</span>
+        <span>{{ drop.created_at|date:"N j, H:i" }} UTC</span>
     </div>
     {% if drop.was_edited %}
     <div class="flex justify-between">
         <span class="text-gray-400">Edited</span>
-        <span>{{ drop.updated_at|date:"N j, H:i" }}</span>
+        <span>{{ drop.updated_at|date:"N j, H:i" }} UTC</span>
     </div>
     {% endif %}
 </div>

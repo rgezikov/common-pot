@@ -177,3 +177,18 @@ def test_add_drop_post(auth_client):
     })
     assert response.status_code == 302
     assert pot.drops.filter(description='Integration test drop').exists()
+
+
+def test_add_drop_post_comma_decimal_amount(auth_client):
+    """iPhones with a comma-decimal locale send '99,00' instead of '99.00'."""
+    client, pot, members = auth_client
+    payer = members[1]
+    response = client.post(f'/pot/{pot.invite_token}/drop/new/', {
+        'description': 'Comma amount drop',
+        'amount': '99,00',
+        'date': '2026-04-01',
+        'paid_by': payer.id,
+    })
+    assert response.status_code == 302
+    drop = pot.drops.get(description='Comma amount drop')
+    assert drop.amount == Decimal('99.00')

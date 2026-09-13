@@ -37,9 +37,9 @@
         </div>
         <div>
             <label class="block text-sm font-medium mb-1">Time <span class="text-gray-400 font-normal">(optional)</span></label>
-            <input type="text" name="time" placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+            <input type="time" name="time"
                 value="{{ request.POST.time|default:'' }}"
-                class="w-24 bg-[var(--input)] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-accent-500">
+                class="w-32 bg-[var(--input)] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-accent-500">
         </div>
     </div>
     <div>

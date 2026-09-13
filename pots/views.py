@@ -204,7 +204,7 @@ def _eval_formula(expr):
 def _parse_drop_form(request, members):
     """Parse and validate drop form POST data. Returns (fields_dict, errors)."""
     description = request.POST.get('description', '').strip()
-    amount_str = request.POST.get('amount', '').strip()
+    amount_str = request.POST.get('amount', '').strip().replace(',', '.')
     date_str = request.POST.get('date', '').strip()
     time_str = request.POST.get('time', '').strip()
     paid_by_id = request.POST.get('paid_by', '').strip()
@@ -238,7 +238,7 @@ def _parse_drop_form(request, members):
 
     weights = {}
     for member in members:
-        w_str = request.POST.get(f'weight_{member.id}', '').strip()
+        w_str = request.POST.get(f'weight_{member.id}', '').strip().replace(',', '.')
         try:
             w = Decimal(w_str) if w_str else Decimal('0')
             if w < 0:
@@ -546,6 +546,33 @@ def ping_bot(request, token):
 
 
 @login_required
+def unlink_chat(request, token):
+    pot = get_object_or_404(Pot, invite_token=token)
+    if request.method == 'POST' and pot.telegram_chat_id:
+        from django.conf import settings
+        import httpx
+        chat_id = pot.telegram_chat_id
+        pot.telegram_chat_id = None
+        pot.save(update_fields=['telegram_chat_id'])
+        tg_token = settings.TELEGRAM_BOT_TOKEN
+        if tg_token:
+            try:
+                httpx.post(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    json={
+                        'chat_id': chat_id,
+                        'text': f"🔌 Pot *{pot.name}* has been unlinked from this chat. Bot commands are disabled here until a pot is linked again.",
+                        'parse_mode': 'Markdown',
+                    },
+                    timeout=5,
+                )
+            except Exception:
+                pass
+        messages.success(request, 'Telegram chat unlinked from this pot.')
+    return redirect('rename_pot', token=token)
+
+
+@login_required
 def add_placeholder(request, token):
     pot = get_object_or_404(Pot, invite_token=token)
     if request.method == 'POST':
@@ -670,11 +697,20 @@ def list_detail(request, token):
         return redirect('join_list', token=token)
     items = shopping_list.items.select_related('checked_by__user').order_by('checked', 'created_at')
     suggestions = shopping_list.suggestions.values_list('name', flat=True)
+    lines = [shopping_list.name, '']
+    for item in items:
+        mark = '☑' if item.checked else '☐'
+        line = f"{mark} {item.name}"
+        if item.note:
+            line += f" ({item.note})"
+        lines.append(line)
+    share_payload = {'title': shopping_list.name, 'text': '\n'.join(lines)}
     return render(request, 'list_detail.html', {
         'list': shopping_list,
         'items': items,
         'list_member': list_member,
         'suggestions': suggestions,
+        'share_payload': share_payload,
     })
 
 

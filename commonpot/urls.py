@@ -22,6 +22,7 @@ urlpatterns = [
     path('claim/<uuid:claim_token>/', views.claim_placeholder, name='claim_placeholder'),
     path('pot/<uuid:token>/rename/', views.rename_pot, name='rename_pot'),
     path('pot/<uuid:token>/ping/', views.ping_bot, name='ping_bot'),
+    path('pot/<uuid:token>/unlink-chat/', views.unlink_chat, name='unlink_chat'),
     path('pot/<uuid:token>/delete/', views.delete_pot, name='delete_pot'),
     path('pot/<uuid:token>/report/', views.pot_report, name='pot_report'),
     path('join/<uuid:token>/', views.join_pot, name='join_pot'),
