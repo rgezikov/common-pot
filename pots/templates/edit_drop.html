@@ -62,14 +62,13 @@
                 class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg">Split equally</button>
             <button type="button" id="weights-all-zero"
                 class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg">Clear all</button>
-            <div class="relative">
-                <button type="button" id="weights-help-btn" aria-label="Help"
-                    class="text-gray-400 hover:text-gray-200 text-base leading-none">ⓘ</button>
-                <div id="weights-help-bubble"
-                    class="hidden absolute z-10 top-6 right-0 w-56 max-w-[80vw] bg-[var(--surface)] text-gray-300 text-xs rounded-lg shadow-lg p-3 border border-gray-700">
-                    Weights are summed and each member's share is proportional to their weight. Leave all blank, or click "Split equally", for an even split. Click "Clear all" then fill in just the members involved.
-                </div>
-            </div>
+            <button type="button" id="weights-help-btn" aria-label="Help"
+                class="text-gray-400 hover:text-gray-200 text-base leading-none">ⓘ</button>
+        </div>
+        <div id="weights-help-backdrop" class="hidden fixed inset-0 z-10 bg-black/50"></div>
+        <div id="weights-help-bubble"
+            class="hidden fixed z-20 inset-x-6 top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-[var(--surface)] text-gray-300 text-xs rounded-lg shadow-lg p-4 border border-gray-700">
+            Weights are summed and each member's share is proportional to their weight. Leave all blank, or click "Split equally", for an even split. Click "Clear all" then fill in just the members involved.
         </div>
         <ul class="space-y-2">
         {% for member, weight in member_weights %}
@@ -97,9 +96,11 @@ document.getElementById('weights-all-zero').addEventListener('click', function()
 document.getElementById('weights-help-btn').addEventListener('click', function(e) {
     e.stopPropagation();
     document.getElementById('weights-help-bubble').classList.toggle('hidden');
+    document.getElementById('weights-help-backdrop').classList.toggle('hidden');
 });
-document.addEventListener('click', function() {
+document.getElementById('weights-help-backdrop').addEventListener('click', function() {
     document.getElementById('weights-help-bubble').classList.add('hidden');
+    document.getElementById('weights-help-backdrop').classList.add('hidden');
 });
 document.querySelector('form').addEventListener('submit', async function(e) {
     e.preventDefault();
