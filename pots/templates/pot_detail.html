@@ -68,7 +68,7 @@ document.querySelector('#pot-menu button').addEventListener('click', function() 
 <div class="mb-6">
     <div class="flex items-center justify-between mb-2">
         <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">
-            Drops{% if drops_total %} <span class="font-semibold text-gray-200 normal-case">{{ drops_total }}</span>{% endif %}
+            Drops
         </h3>
         <a href="{% url 'add_drop' pot.invite_token %}" class="bg-accent-600 hover:bg-accent-700 text-white text-sm font-medium px-3 py-1 rounded-lg">+ Add Drop</a>
     </div>

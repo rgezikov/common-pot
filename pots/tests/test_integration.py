@@ -192,3 +192,37 @@ def test_add_drop_post_comma_decimal_amount(auth_client):
     assert response.status_code == 302
     drop = pot.drops.get(description='Comma amount drop')
     assert drop.amount == Decimal('99.00')
+
+
+def test_add_drop_form_weight_defaults_are_real_values(auth_client):
+    """Default weights must be actual input values, not placeholders — otherwise
+    zeroing every other member's field silently does nothing, since an untouched
+    placeholder is never submitted and reads back as 0. Blank is fine (it is a
+    real, submitted empty value that the "Split equally" button fills to 1)."""
+    client, pot, members = auth_client
+    response = client.get(f'/pot/{pot.invite_token}/drop/new/')
+    content = response.content.decode()
+    assert 'placeholder=' not in content
+    for member in members:
+        assert f'name="weight_{member.id}" min="0" step="any"\n                    value=""' in content
+
+
+def test_add_drop_post_zeroing_others_directs_full_amount_to_one_member(auth_client):
+    client, pot, members = auth_client
+    payer = members[0]
+    recipient = members[1]
+    data = {
+        'description': 'Single recipient drop',
+        'amount': '50.00',
+        'date': '2026-04-01',
+        'paid_by': payer.id,
+    }
+    for member in members:
+        data[f'weight_{member.id}'] = '1' if member.id == recipient.id else '0'
+    response = client.post(f'/pot/{pot.invite_token}/drop/new/', data)
+    assert response.status_code == 302
+    drop = pot.drops.get(description='Single recipient drop')
+    splits = list(drop.splits.all())
+    assert len(splits) == 1
+    assert splits[0].member_id == recipient.id
+    assert splits[0].amount == Decimal('50.00')

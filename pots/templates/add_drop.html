@@ -57,18 +57,23 @@
     </div>
     <div>
         <label class="block text-sm font-medium mb-2">Split (enter share weight per member; leave 0 to exclude)</label>
+        <div class="flex gap-2 mb-2">
+            <button type="button" id="weights-all-equal"
+                class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg">Split equally</button>
+            <button type="button" id="weights-all-zero"
+                class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg">Clear all</button>
+        </div>
         <ul class="space-y-2">
-        {% for member in members %}
+        {% for member, weight in member_weights %}
             <li class="flex items-center gap-3">
                 <span class="flex-1 text-sm">{{ member.name }}</span>
                 <input type="number" name="weight_{{ member.id }}" min="0" step="any"
-                    value="{{ request.POST|default_if_none:'' }}"
-                    placeholder="1"
-                    class="w-24 bg-[var(--input)] rounded-lg px-3 py-2 text-base text-right focus:outline-none focus:ring-2 focus:ring-accent-500">
+                    value="{{ weight }}" class="weight-input
+                    w-24 bg-[var(--input)] rounded-lg px-3 py-2 text-base text-right focus:outline-none focus:ring-2 focus:ring-accent-500">
             </li>
         {% endfor %}
         </ul>
-        <p class="text-xs text-gray-400 mt-2">Leave all blank or put equal numbers to split equally among everyone.</p>
+        <p class="text-xs text-gray-400 mt-2">Leave all blank, or click "Split equally", for an even split. Click "Clear all" then fill in just the members involved.</p>
     </div>
     <button type="submit" id="drop-submit"
         class="w-full bg-accent-600 hover:bg-accent-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg text-base">
@@ -76,6 +81,12 @@
     </button>
 </form>
 <script>
+document.getElementById('weights-all-equal').addEventListener('click', function() {
+    document.querySelectorAll('.weight-input').forEach(el => el.value = '1');
+});
+document.getElementById('weights-all-zero').addEventListener('click', function() {
+    document.querySelectorAll('.weight-input').forEach(el => el.value = '0');
+});
 document.querySelector('form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('drop-submit');

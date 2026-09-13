@@ -121,12 +121,10 @@ def pot_detail(request, token):
         key=lambda r: r['balance'],
         reverse=True,
     )
-    drops_total = sum(d.amount for d in drops)
     return render(request, 'pot_detail.html', {
         'pot': pot,
         'members': members,
         'drops': drops,
-        'drops_total': drops_total,
         'balance_rows': balance_rows,
         'settlements': settlements,
     })
@@ -162,15 +160,19 @@ def add_drop(request, token):
             notify_drop_added(pot, drop)
             return redirect('pot_detail', token=token)
 
+        member_weights = [(m, request.POST.get(f'weight_{m.id}', '')) for m in members]
         return render(request, 'add_drop.html', {
             'pot': pot, 'members': members,
             'current_member': current_member,
             'errors': errors, 'today': datetime.date.today().isoformat(),
+            'member_weights': member_weights,
         })
 
+    member_weights = [(m, '') for m in members]
     return render(request, 'add_drop.html', {
         'pot': pot, 'members': members,
         'current_member': current_member,
+        'member_weights': member_weights,
         'today': datetime.date.today().isoformat(),
     })
 
