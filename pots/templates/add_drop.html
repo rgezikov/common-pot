@@ -98,10 +98,12 @@ document.getElementById('weights-help-btn').addEventListener('click', function(e
     document.getElementById('weights-help-bubble').classList.toggle('hidden');
     document.getElementById('weights-help-backdrop').classList.toggle('hidden');
 });
-document.getElementById('weights-help-backdrop').addEventListener('click', function() {
+function closeWeightsHelp() {
     document.getElementById('weights-help-bubble').classList.add('hidden');
     document.getElementById('weights-help-backdrop').classList.add('hidden');
-});
+}
+document.getElementById('weights-help-backdrop').addEventListener('click', closeWeightsHelp);
+document.getElementById('weights-help-bubble').addEventListener('click', closeWeightsHelp);
 document.querySelector('form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('drop-submit');
