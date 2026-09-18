@@ -49,6 +49,20 @@
     {% endfor %}
 </table>
 
+<h2>True Expenses <span style="font-size:13px;color:#666;font-weight:normal;text-transform:none">(total: {{ spent_total }}, excludes settlement drops)</span></h2>
+<table>
+    <tr>
+        <th>Member</th>
+        <th class="num">Spent</th>
+    </tr>
+    {% for row in balance_rows %}
+    <tr>
+        <td>{{ row.name }}</td>
+        <td class="num">{{ row.spent }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
 {% if settlements %}
 <h2>Settlements</h2>
 <table>
@@ -76,7 +90,7 @@
     <tr>
         <td>{{ drop.date }}</td>
         <td>
-            {{ drop.description }}
+            {{ drop.description }}{% if drop.is_settlement %} <span style="font-size:11px;color:#666">(settlement)</span>{% endif %}
             <div class="split-list">
                 {% for split in drop.splits.all %}{{ split.member.name }}: {{ split.amount }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </div>

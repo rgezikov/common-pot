@@ -20,11 +20,12 @@ def make_split(member_id, amount):
     return s
 
 
-def make_drop(paid_by_id, amount, splits):
+def make_drop(paid_by_id, amount, splits, is_settlement=False):
     d = MagicMock()
     d.paid_by_id = paid_by_id
     d.amount = Decimal(str(amount))
     d.splits.all.return_value = splits
+    d.is_settlement = is_settlement
     return d
 
 
@@ -66,8 +67,23 @@ def test_zero_balance_when_everyone_pays_own_share():
 def test_no_drops_all_zero():
     alice, bob = make_member(1, 'Alice'), make_member(2, 'Bob')
     b = calculate_balances([alice, bob], [])
-    assert b[1] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'balance': Decimal('0')}
-    assert b[2] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'balance': Decimal('0')}
+    assert b[1] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'spent': Decimal('0'), 'balance': Decimal('0')}
+    assert b[2] == {'paid': Decimal('0'), 'owed': Decimal('0'), 'spent': Decimal('0'), 'balance': Decimal('0')}
+
+
+def test_spent_excludes_settlement_drops():
+    """A settlement/repayment drop still counts toward paid/owed/balance,
+    but must not inflate the 'spent' (actual expenses) total."""
+    alice, bob = make_member(1, 'Alice'), make_member(2, 'Bob')
+    expense = make_drop(1, '100.00', [make_split(1, '50.00'), make_split(2, '50.00')])
+    repayment = make_drop(2, '50.00', [make_split(1, '50.00')], is_settlement=True)
+    b = calculate_balances([alice, bob], [expense, repayment])
+    assert b[1]['owed'] == Decimal('100.00')
+    assert b[1]['spent'] == Decimal('50.00')
+    assert b[2]['owed'] == Decimal('50.00')
+    assert b[2]['spent'] == Decimal('50.00')
+    assert b[1]['balance'] == Decimal('0')
+    assert b[2]['balance'] == Decimal('0')
 
 
 # --- Settlement tests ---

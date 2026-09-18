@@ -3,16 +3,21 @@ from decimal import Decimal
 
 def calculate_balances(members, drops):
     """
-    Calculate each member's paid, owed, and net balance.
+    Calculate each member's paid, owed, spent, and net balance.
+
+    'owed' is each member's total share across all drops, including
+    settlement/repayment drops — it's what 'balance' is derived from.
+    'spent' excludes settlement drops, so it reflects actual shared
+    expenses rather than money moved to settle up.
 
     Args:
         members: iterable of Member objects
         drops: iterable of Drop objects with prefetched splits and paid_by
 
     Returns:
-        dict of {member_id: {'paid': Decimal, 'owed': Decimal, 'balance': Decimal}}
+        dict of {member_id: {'paid': Decimal, 'owed': Decimal, 'spent': Decimal, 'balance': Decimal}}
     """
-    data = {m.id: {'paid': Decimal('0'), 'owed': Decimal('0')} for m in members}
+    data = {m.id: {'paid': Decimal('0'), 'owed': Decimal('0'), 'spent': Decimal('0')} for m in members}
 
     for drop in drops:
         if drop.paid_by_id in data:
@@ -20,6 +25,8 @@ def calculate_balances(members, drops):
         for split in drop.splits.all():
             if split.member_id in data:
                 data[split.member_id]['owed'] += split.amount
+                if not drop.is_settlement:
+                    data[split.member_id]['spent'] += split.amount
 
     for v in data.values():
         v['balance'] = v['paid'] - v['owed']

@@ -154,6 +154,7 @@ def add_drop(request, token):
                 paid_by=paid_by,
                 date=fields['date'],
                 time=fields['time'],
+                is_settlement=fields['is_settlement'],
             )
             for member_id, share in fields['splits'].items():
                 Split.objects.create(drop=drop, member_id=member_id, amount=share)
@@ -210,6 +211,7 @@ def _parse_drop_form(request, members):
     date_str = request.POST.get('date', '').strip()
     time_str = request.POST.get('time', '').strip()
     paid_by_id = request.POST.get('paid_by', '').strip()
+    is_settlement = request.POST.get('is_settlement') == 'on'
 
     errors = []
 
@@ -265,6 +267,7 @@ def _parse_drop_form(request, members):
         'date': date,
         'time': time,
         'paid_by_id': paid_by_id,
+        'is_settlement': is_settlement,
         'splits': splits,
     }, errors
 
@@ -295,6 +298,7 @@ def edit_drop(request, token, drop_id):
             drop.paid_by = paid_by
             drop.date = fields['date']
             drop.time = fields['time']
+            drop.is_settlement = fields['is_settlement']
             drop.save()
             drop.splits.all().delete()
             for member_id, share in fields['splits'].items():
@@ -435,10 +439,12 @@ def pot_report(request, token):
         reverse=True,
     )
     drops_total = sum(d.amount for d in drops)
+    spent_total = sum(v['spent'] for v in balances.values())
     return render(request, 'pot_report.html', {
         'pot': pot,
         'drops': drops,
         'drops_total': drops_total,
+        'spent_total': spent_total,
         'balance_rows': balance_rows,
         'settlements': settlements,
         'generated_date': datetime.date.today(),

@@ -55,6 +55,12 @@
             {% endfor %}
         </select>
     </div>
+    <div class="flex items-center gap-2">
+        <input type="checkbox" name="is_settlement" id="is_settlement"
+            {% if request.POST %}{% if request.POST.is_settlement == 'on' %}checked{% endif %}{% elif drop.is_settlement %}checked{% endif %}
+            class="w-5 h-5 rounded bg-[var(--input)] focus:outline-none focus:ring-2 focus:ring-accent-500">
+        <label for="is_settlement" class="text-sm">This is a settlement / repayment <span class="text-gray-400 font-normal">(excluded from spending totals)</span></label>
+    </div>
     <div>
         <label class="block text-sm font-medium mb-2">Split (enter share weight per member; zero or empty to exclude)</label>
         <div class="flex items-center gap-2 mb-2">

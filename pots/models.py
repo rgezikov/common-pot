@@ -75,6 +75,7 @@ class Drop(models.Model):
     date = models.DateField()
     time = models.TimeField(default=datetime.time)
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default=SOURCE_WEB)
+    is_settlement = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

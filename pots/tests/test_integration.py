@@ -226,3 +226,59 @@ def test_add_drop_post_zeroing_others_directs_full_amount_to_one_member(auth_cli
     assert len(splits) == 1
     assert splits[0].member_id == recipient.id
     assert splits[0].amount == Decimal('50.00')
+
+
+def test_add_drop_post_is_settlement_defaults_false(auth_client):
+    client, pot, members = auth_client
+    payer = members[1]
+    client.post(f'/pot/{pot.invite_token}/drop/new/', {
+        'description': 'Regular expense',
+        'amount': '10.00',
+        'date': '2026-04-01',
+        'paid_by': payer.id,
+    })
+    drop = pot.drops.get(description='Regular expense')
+    assert drop.is_settlement is False
+
+
+def test_add_drop_post_is_settlement_checkbox(auth_client):
+    client, pot, members = auth_client
+    payer = members[1]
+    client.post(f'/pot/{pot.invite_token}/drop/new/', {
+        'description': 'Repayment',
+        'amount': '10.00',
+        'date': '2026-04-01',
+        'paid_by': payer.id,
+        'is_settlement': 'on',
+    })
+    drop = pot.drops.get(description='Repayment')
+    assert drop.is_settlement is True
+
+
+def test_pot_detail_spending_excludes_settlement_drops(auth_client):
+    client, pot, members = auth_client
+    a, b = members[0], members[1]
+    # Real expense: 100, split evenly between a and b (50 each).
+    client.post(f'/pot/{pot.invite_token}/drop/new/', {
+        'description': 'Groceries', 'amount': '100.00', 'date': '2026-04-01',
+        'paid_by': a.id, f'weight_{a.id}': '1', f'weight_{b.id}': '1',
+    })
+    # Repayment: b pays a back 50, recorded as a settlement split fully to a.
+    client.post(f'/pot/{pot.invite_token}/drop/new/', {
+        'description': 'Payback', 'amount': '50.00', 'date': '2026-04-01',
+        'paid_by': b.id, 'is_settlement': 'on',
+        f'weight_{a.id}': '1', f'weight_{b.id}': '0',
+    })
+    response = client.get(f'/pot/{pot.invite_token}/')
+    content = response.content.decode()
+    assert 'Groceries' in content
+    groceries = pot.drops.get(description='Groceries')
+    payback = pot.drops.get(description='Payback')
+    assert payback.is_settlement is True
+    # Isolate to just these two drops/members — big_pot seeds 100 random
+    # drops across all 30 members, so pot-wide totals aren't comparable.
+    balances = calculate_balances([a, b], [groceries, payback])
+    assert balances[a.id]['spent'] == Decimal('50.00')
+    assert balances[b.id]['spent'] == Decimal('50.00')
+    assert balances[a.id]['balance'] == Decimal('0.00')
+    assert balances[b.id]['balance'] == Decimal('0.00')

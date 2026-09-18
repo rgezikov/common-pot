@@ -16,6 +16,12 @@
         <span class="text-gray-400">Paid by</span>
         <span>{{ drop.paid_by.name }}</span>
     </div>
+    {% if drop.is_settlement %}
+    <div class="flex justify-between">
+        <span class="text-gray-400">Type</span>
+        <span class="text-xs bg-gray-700 text-gray-300 rounded px-1.5 py-0.5">Settlement</span>
+    </div>
+    {% endif %}
     <div class="flex justify-between">
         <span class="text-gray-400">Date</span>
         <span>{{ drop.date|date:"N j" }}{% if drop.time|time:"H:i" != "00:00" %}, {{ drop.time|time:"H:i" }}{% endif %}</span>
