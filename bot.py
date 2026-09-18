@@ -139,7 +139,7 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/pot <invite\\_token> — link an existing pot\n"
             "/pot unlink — unlink the current pot from this chat\n"
             "/link — get the web app link\n"
-            "/drop <amount> [description] [/paid @user] [/split @user[:weight], ...] [/settlement] — log an expense\n"
+            "/drop <amount> \\[description\\] \\[/paid @user\\] \\[/split @user\\[:weight\\], ...\\] \\[/settlement\\] — log an expense\n"
             "/balance — show member balances\n"
             "/settle — show settlement suggestions"
         ),
