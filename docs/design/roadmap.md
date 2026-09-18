@@ -32,6 +32,12 @@ Define the full top level development path.
 | [14](phases/phase-14-mobile-font-size/spec.md) | Mobile Font Size | Increase base font size on mobile browsers for readability |
 | [15](phases/phase-15-about/spec.md) | About Page | Company, year, contact info accessible from the home menu |
 | [16](phases/phase-16-owner-stats/spec.md) | Site Owner Statistics | Platform-wide counts and activity over time, superusers only |
+| [17](phases/phase-17-back-navigation/spec.md) | Back-Button Navigation | Make the browser back button behave as an "up" button throughout the app |
+| [18](phases/phase-18-color-themes/spec.md) | Color Themes | Named color themes, selectable independently from light/dark mode |
+| [18.1](phases/phase-18.1-list-menu/spec.md) | Shopping List Menu | Replace the gear icon with a hamburger menu that groups list actions |
+| [18.2](phases/phase-18.2-menu-icon-consistency/spec.md) | Menu Icon Consistency | Use the hamburger icon (☰) for all dropdown menus across the app |
+| [19](phases/phase-19-drop-form-fixes/spec.md) | Drop Form Usability Fixes | Comma-decimal input, real (non-placeholder) weight defaults, no spinner arrows, drop the turnover total |
+| [20](phases/phase-20-settlement-tracking/spec.md) | Settlement / Repayment Tracking | Mark a drop as a settlement so it's excluded from each member's true spending total |
 | [1000](phases/phase-1000-shopping-lists/spec.md) | Shared Shopping Lists | Collaborative checklists for groups, independent of expense tracking |
 | [1001](phases/phase-1001-list-suggestions/spec.md) | Shopping List: Item Suggestions | Item name suggestions and duplicate prevention |
 | [1002](phases/phase-1002-list-density/spec.md) | Shopping List: Compact Display | Tighter item rows so more fit on screen without scrolling |
