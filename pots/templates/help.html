@@ -20,7 +20,8 @@
             <li>Create a pot or join one via an invite link.</li>
             <li>Add drops (expenses) with an amount, description, and who paid.</li>
             <li>Set split weights per member — leave all blank or put the same number to split equally.</li>
-            <li>Check balances and settlement suggestions on the pot page.</li>
+            <li>If a drop is just one member paying another back (not a new shared expense), check "This is a settlement / repayment" — it still counts toward balances, but is excluded from the Spending total.</li>
+            <li>Check balances, spending, and settlement suggestions on the pot page.</li>
             <li>Share the invite link from Settings so others can join.</li>
         </ol>
     </section>
@@ -32,11 +33,10 @@
             <li><span class="font-mono text-gray-200">/pot new</span> — create a new pot for this group</li>
             <li><span class="font-mono text-gray-200">/pot &lt;invite_link&gt;</span> — link an existing pot (invite link from Settings)</li>
             <li><span class="font-mono text-gray-200">/link</span> — get the web app links (Open and Join)</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner</span> — log a drop, split equally, paid by you</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner /paid @alice</span> — paid by @alice</li>
-            <li><span class="font-mono text-gray-200">/drop 5 settlement /split @alice</span> — pay to one member (weight optional)</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner /split @alice:2, @bob:1</span> — custom weights</li>
-            <li><span class="font-mono text-gray-200">/drop 45 dinner /paid @alice /split @alice:2, @bob:1</span> — paid by @alice, custom split</li>
+            <li><span class="font-mono text-gray-200">/drop &lt;amount&gt; [description] [/paid @user] [/split @user[:weight], ...] [/settlement]</span> — log an expense; split equally among everyone and paid by you unless specified</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner</span> — paid by you, split equally</li>
+            <li><span class="font-mono text-gray-200">/drop 45 dinner /paid @alice /split @alice:2, @bob:1</span> — paid by @alice, custom weights</li>
+            <li><span class="font-mono text-gray-200">/drop 50 payback /paid @bob /split @alice /settlement</span> — settlement/repayment: counts toward balances, but excluded from the Spending total (not the same as <span class="font-mono text-gray-200">/settle</span> below)</li>
             <li><span class="font-mono text-gray-200">/drop =120-15 taxi</span> — amount as a formula</li>
             <li><span class="font-mono text-gray-200">/balance</span> — show member balances</li>
             <li><span class="font-mono text-gray-200">/settle</span> — show settlement suggestions</li>

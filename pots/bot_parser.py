@@ -2,14 +2,19 @@
 Parse /drop command arguments from Telegram bot messages.
 
 Syntax:
-  /drop <amount> [description] [/paid @username] [/split @username:weight [, @username:weight ...]]
+  /drop <amount> [description] [/paid @username] [/split @username[:weight] [, @username[:weight] ...]] [/settlement]
 
 - amount: first token, numeric
-- description: words before any /paid or /split section
+- description: words before any /paid, /split, or /settlement marker
 - /paid @username   — payer by Telegram username
-- /split @username:weight [, @username:weight ...]
-                    — custom split; items separated by commas;
-                      members not listed are excluded from this drop
+- /split @username[:weight] [, @username[:weight] ...]
+                    — custom split; items separated by commas; weight
+                      defaults to 1 if omitted; members not listed are
+                      excluded from this drop
+- /settlement       — mark as a settlement/repayment: still counts toward
+                      balances, but excluded from the Spending total
+                      (distinct from the /settle command, which shows
+                      suggested transfers)
 - Members must have a Telegram username to be referenced in /paid or /split
 - Legacy: @username as the last description token is accepted as payer
 
@@ -18,6 +23,7 @@ Examples:
   /drop 120 dinner /paid @alice
   /drop 102 payback /paid @roman /split @roman:1, @rgezikov:2
   /drop 120 dinner /split @alice:1, @bob:2
+  /drop 50 payback /paid @bob /split @alice /settlement
 """
 import re
 import shlex
@@ -34,11 +40,11 @@ def parse_drop_command(text: str) -> dict:
     text = text.strip()
     if not text:
         raise ValueError(
-            "Usage: /drop <amount> [description] [/paid:<name>] [/split <name:weight> ...]"
+            "Usage: /drop <amount> [description] [/paid @user] [/split @user[:weight], ...] [/settlement]"
         )
 
-    # Ensure /paid and /split are always separate tokens even without a leading space
-    text = re.sub(r'(\S)(/paid\b|/split\b)', r'\1 \2', text)
+    # Ensure /paid, /split, and /settlement are always separate tokens even without a leading space
+    text = re.sub(r'(\S)(/paid\b|/split\b|/settlement\b)', r'\1 \2', text)
     try:
         tokens = shlex.split(text)
     except ValueError:
@@ -65,11 +71,12 @@ def parse_drop_command(text: str) -> dict:
 
 def resolve_member_specs(tokens: list, members) -> tuple:
     """
-    Parse tokens into (description, weights_or_none, payer_member_or_none).
+    Parse tokens into (description, weights_or_none, payer_member_or_none, is_settlement).
 
-    Recognises two section markers:
+    Recognises three markers:
       /paid:<name>  — payer; name extends (with spaces) to next marker
       /split        — split specs follow as name:weight pairs
+      /settlement   — standalone flag; marks the drop as a settlement/repayment
 
     Legacy: a lone @username at the end of the description section = payer.
 
@@ -77,6 +84,7 @@ def resolve_member_specs(tokens: list, members) -> tuple:
       description    — str
       weights        — {member_id: Decimal} or None (None = equal split among all)
       payer_member   — Member or None
+      is_settlement  — bool
     """
     member_by_username = {m.telegram_username.lower(): m for m in members if m.telegram_username}
 
@@ -89,6 +97,7 @@ def resolve_member_specs(tokens: list, members) -> tuple:
     paid_tokens = []
     split_tokens = []
     current = 'description'
+    is_settlement = False
 
     for token in tokens:
         tl = token.lower()
@@ -96,6 +105,8 @@ def resolve_member_specs(tokens: list, members) -> tuple:
             current = 'paid'
         elif tl == '/split':
             current = 'split'
+        elif tl == '/settlement':
+            is_settlement = True
         else:
             if current == 'description':
                 description_tokens.append(token)
@@ -117,7 +128,7 @@ def resolve_member_specs(tokens: list, members) -> tuple:
 
     # Resolve split specs — join tokens, split on commas, each item is name:weight
     if not split_tokens:
-        return description, None, payer_member
+        return description, None, payer_member, is_settlement
 
     split_str = ' '.join(split_tokens)
     items = [item.strip() for item in split_str.split(',') if item.strip()]
@@ -140,4 +151,4 @@ def resolve_member_specs(tokens: list, members) -> tuple:
         if member is not None:
             weights[member.id] = weight
 
-    return description, weights if weights else None, payer_member
+    return description, weights if weights else None, payer_member, is_settlement

@@ -112,7 +112,7 @@ def _get_balances_sync(pot: Pot):
     return balances, member_names, settlements
 
 
-def _create_drop_sync(pot, description, amount, paid_by, splits):
+def _create_drop_sync(pot, description, amount, paid_by, splits, is_settlement=False):
     drop = Drop.objects.create(
         pot=pot,
         description=description,
@@ -120,6 +120,7 @@ def _create_drop_sync(pot, description, amount, paid_by, splits):
         paid_by=paid_by,
         date=datetime.date.today(),
         source=Drop.SOURCE_TELEGRAM,
+        is_settlement=is_settlement,
     )
     for member_id, share in splits.items():
         Split.objects.create(drop=drop, member_id=member_id, amount=share)
@@ -138,7 +139,7 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/pot <invite\\_token> — link an existing pot\n"
             "/pot unlink — unlink the current pot from this chat\n"
             "/link — get the web app link\n"
-            "/drop <amount> [description] [/paid @user] [/split @user:weight, ...] — log an expense\n"
+            "/drop <amount> [description] [/paid @user] [/split @user[:weight], ...] [/settlement] — log an expense\n"
             "/balance — show member balances\n"
             "/settle — show settlement suggestions"
         ),
@@ -243,7 +244,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/drop <amount> <description> [@payer]"""
+    """/drop <amount> [description] [/paid @user] [/split @user[:weight], ...] [/settlement]"""
     if update.effective_chat.type == 'private':
         await update.message.reply_text("Use /drop in a group chat.")
         return
@@ -261,7 +262,7 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parsed = parse_drop_command(text)
     except ValueError as e:
         await update.message.reply_text(
-            f"❌ {e}\n\nUsage: /drop <amount> [description] [/paid <name>] [/split <name:weight>, ...]"
+            f"❌ {e}\n\nUsage: /drop <amount> [description] [/paid <name>] [/split <name>[:weight], ...] [/settlement]"
         )
         return
 
@@ -271,11 +272,11 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     sender = await sync_to_async(_get_or_create_member_sync)(pot, update.effective_user)
-    description, custom_weights, paid_by_spec = resolve_member_specs(parsed['tokens'], members)
+    description, custom_weights, paid_by_spec, is_settlement = resolve_member_specs(parsed['tokens'], members)
     paid_by = paid_by_spec or sender
     if not description:
         await update.message.reply_text(
-            "❌ Description is required\n\nUsage: /drop <amount> <description> [paid:name] [member:weight ...] [@payer]"
+            "❌ Description is required\n\nUsage: /drop <amount> <description> [/paid @user] [/split @user[:weight], ...] [/settlement]"
         )
         return
 
@@ -289,12 +290,13 @@ async def cmd_drop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     splits = calculate_splits(parsed['amount'], weights)
 
-    await sync_to_async(_create_drop_sync)(pot, description, parsed['amount'], paid_by, splits)
+    await sync_to_async(_create_drop_sync)(pot, description, parsed['amount'], paid_by, splits, is_settlement)
 
+    settlement_note = "\n_Marked as a settlement — excluded from Spending_" if is_settlement else ""
     await update.message.reply_text(
         f"✅ *{description}* — {parsed['amount']}\n"
         f"Paid by: {paid_by.name}\n"
-        f"{split_note}",
+        f"{split_note}{settlement_note}",
         parse_mode='Markdown',
     )
 

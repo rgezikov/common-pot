@@ -63,42 +63,62 @@ class FakeMember:
 
 def test_no_sections_equal_split():
     members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['team', 'dinner'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['team', 'dinner'], members)
     assert desc == 'team dinner'
     assert weights is None
     assert payer is None
+    assert is_settlement is False
+
+
+def test_settlement_flag():
+    members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
+    desc, weights, payer, is_settlement = resolve_member_specs(
+        ['payback', '/paid', '@bob', '/split', '@alice', '/settlement'], members,
+    )
+    assert desc == 'payback'
+    assert is_settlement is True
+    assert weights == {1: Decimal('1')}
+
+
+def test_settlement_flag_parsed_from_full_command():
+    members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
+    r = parse_drop_command('50 payback /paid @bob /split @alice /settlement')
+    desc, weights, payer, is_settlement = resolve_member_specs(r['tokens'], members)
+    assert is_settlement is True
+    assert payer.id == 2
+    assert weights == {1: Decimal('1')}
 
 
 def test_paid_section_by_username():
     members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/paid', '@alice'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/paid', '@alice'], members)
     assert desc == 'dinner'
     assert payer is not None and payer.id == 1
 
 
 def test_paid_section_username_case_insensitive():
     members = [FakeMember(1, 'Alice', 'alice')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/paid', '@Alice'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/paid', '@Alice'], members)
     assert payer is not None and payer.id == 1
 
 
 def test_paid_name_without_at_not_matched():
     # Name-based lookup no longer supported — 'Alice Smith' is not a username
     members = [FakeMember(1, 'Alice Smith', 'asmith')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/paid', 'Alice', 'Smith'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/paid', 'Alice', 'Smith'], members)
     assert payer is None
 
 
 def test_split_section_by_username():
     members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/split', '@alice:1,', '@bob:2'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/split', '@alice:1,', '@bob:2'], members)
     assert desc == 'dinner'
     assert weights == {1: Decimal('1'), 2: Decimal('2')}
 
 
 def test_paid_and_split_sections():
     members = [FakeMember(1, 'Roman', 'roman'), FakeMember(2, 'Roman G', 'rgezikov')]
-    desc, weights, payer = resolve_member_specs(
+    desc, weights, payer, is_settlement = resolve_member_specs(
         ['payback', '/paid', '@roman', '/split', '@roman:1,', '@rgezikov:2'],
         members,
     )
@@ -109,26 +129,26 @@ def test_paid_and_split_sections():
 
 def test_split_unknown_username_skipped():
     members = [FakeMember(1, 'Alice', 'alice')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/split', '@alice:1,', '@nobody:2'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/split', '@alice:1,', '@nobody:2'], members)
     assert weights == {1: Decimal('1')}
 
 
 def test_legacy_at_payer_at_end_of_description():
     members = [FakeMember(1, 'Alice', 'alice')]
-    desc, weights, payer = resolve_member_specs(['dinner', '@alice'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '@alice'], members)
     assert desc == 'dinner'
     assert payer is not None and payer.id == 1
 
 
 def test_split_single_member_no_weight():
     members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['settlement', '/split', '@alice'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['settlement', '/split', '@alice'], members)
     assert weights == {1: Decimal('1')}
 
 
 def test_split_multiple_members_no_weight():
     members = [FakeMember(1, 'Alice', 'alice'), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/split', '@alice,', '@bob'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/split', '@alice,', '@bob'], members)
     assert weights == {1: Decimal('1'), 2: Decimal('1')}
 
 
@@ -137,7 +157,7 @@ def test_space_before_colon_in_split():
     # Result: "@RGezikovRus :5, @RGezikov :3" — space between username and colon
     members = [FakeMember(1, 'Roman G', 'rgezikovrus'), FakeMember(2, 'Roman', 'rgezikov')]
     r = parse_drop_command('42 test 42 /paid @RGezikovRus /split @RGezikovRus :5, @RGezikov :3')
-    desc, weights, payer = resolve_member_specs(r['tokens'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(r['tokens'], members)
     assert desc == 'test 42'
     assert payer is not None and payer.id == 1
     assert weights == {1: Decimal('5'), 2: Decimal('3')}
@@ -145,7 +165,7 @@ def test_space_before_colon_in_split():
 
 def test_member_without_username_not_matchable():
     members = [FakeMember(1, 'Alice', ''), FakeMember(2, 'Bob', 'bob')]
-    desc, weights, payer = resolve_member_specs(['dinner', '/split', '@alice:1,', '@bob:2'], members)
+    desc, weights, payer, is_settlement = resolve_member_specs(['dinner', '/split', '@alice:1,', '@bob:2'], members)
     # Alice has no username — not matchable
     assert 1 not in (weights or {})
     assert weights == {2: Decimal('2')}
